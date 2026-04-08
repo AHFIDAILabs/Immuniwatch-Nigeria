@@ -1,0 +1,15 @@
+{
+  "best_threshold": 0.35,
+  "label2id": {
+    "Misinformation": 0,
+    "Factual": 1,
+    "Uncertain": 2
+  },
+  "id2label": {
+    "0": "Misinformation",
+    "1": "Factual",
+    "2": "Uncertain"
+  },
+  "model_path": "models/misinfo/production/v1",
+  "max_length": 128
+}

@@ -1,0 +1,10 @@
+{
+  "model": "xlm-roberta-base",
+  "best_threshold": 0.35,
+  "accuracy": 0.9629,
+  "macro_f1": 0.9311,
+  "misinformation_recall": 0.8426,
+  "misinformation_precision": 0.8667,
+  "airs_kpi_precision_met": true,
+  "airs_kpi_recall_met": true
+}
