@@ -176,7 +176,7 @@ async def require_api_key(x_ml_api_key: str = Header(default=None)):
 @app.get("/")
 async def root():
     return {
-        "service":     "ImmuniWatch Nigeria — ML Service",
+        "service":     "ImmuniWatch Nigeria ML Service",
         "version":     MODEL_VERSION,
         "status":      "running",
         "docs":        "/docs",
