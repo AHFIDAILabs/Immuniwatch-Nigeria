@@ -171,6 +171,22 @@ async def require_api_key(x_ml_api_key: str = Header(default=None)):
 
 
 # ---------------------------------------------------------------------------
+# GET / — root info endpoint, no auth required
+# ---------------------------------------------------------------------------
+@app.get("/")
+async def root():
+    return {
+        "service":     "ImmuniWatch Nigeria — ML Service",
+        "version":     MODEL_VERSION,
+        "status":      "running",
+        "docs":        "/docs",
+        "health":      "/health",
+        "classify":    "POST /classify",
+        "batch":       "POST /classify/batch",
+    }
+
+
+# ---------------------------------------------------------------------------
 # GET /health — no auth required, must respond in < 10ms
 # ---------------------------------------------------------------------------
 @app.get("/health")
