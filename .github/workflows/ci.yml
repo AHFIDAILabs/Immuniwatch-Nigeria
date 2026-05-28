@@ -31,9 +31,14 @@ jobs:
         run: ruff check src/ tests/
 
       - name: Run tests
-        run: pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=long 2>&1 | tee /tmp/test_output.txt; exit ${PIPESTATUS[0]}
         env:
           API_KEY: test-key-for-unit-tests-ci-safe-32chars
           MODEL_VERSION: v1.0.0
           EMBEDDING_MODEL: intfloat/multilingual-e5-base
           DEVICE: cpu
+          PYTHONPATH: .
+
+      - name: Show failures (always)
+        if: failure()
+        run: grep -A 30 "FAILED\|ERROR\|short test summary" /tmp/test_output.txt || cat /tmp/test_output.txt | tail -80
