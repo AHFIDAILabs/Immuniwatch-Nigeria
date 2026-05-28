@@ -4,7 +4,6 @@ import os
 import signal
 import sys
 import time
-from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from kafka import KafkaProducer

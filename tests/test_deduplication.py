@@ -1,4 +1,3 @@
-import pytest
 from src.ingestion.deduplication import (
     Deduplicator,
     _normalise,

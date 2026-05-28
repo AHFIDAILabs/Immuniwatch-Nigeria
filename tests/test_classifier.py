@@ -1,4 +1,3 @@
-import pytest
 from src.models.classifier import (
     _resolve_state,
     _resolve_language,
@@ -6,7 +5,6 @@ from src.models.classifier import (
     LABELS,
     LABEL_TO_ID,
     NIGERIAN_STATES,
-    LANG_NORMALISE,
 )
 
 

@@ -5,7 +5,6 @@ Tests FastAPI endpoints using TestClient.
 Mocks classifier so ONNX model is not required.
 """
 
-import json
 import os
 import pytest
 from unittest.mock import patch

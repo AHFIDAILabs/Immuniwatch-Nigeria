@@ -3,7 +3,7 @@ import logging
 import re
 import time
 from threading import Lock
-from typing import Optional, Set
+from typing import Set
 
 log = logging.getLogger(__name__)
 

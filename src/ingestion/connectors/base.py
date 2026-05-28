@@ -1,9 +1,8 @@
 import hashlib
-import json
 import logging
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import datetime
 from typing import Callable, Optional
 
 log = logging.getLogger(__name__)

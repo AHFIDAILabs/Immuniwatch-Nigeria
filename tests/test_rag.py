@@ -1,11 +1,9 @@
-import pytest
 from src.intelligence.rag import (
     EvidenceRecord,
     RAGRetriever,
     TOP_K,
     SIMILARITY_THRESHOLD,
     EMBEDDING_MODEL,
-    COLLECTION_NAME,
 )
 
 

@@ -4,10 +4,8 @@ from src.api.schemas import (
     ClassifyRequest,
     ClassifyResponse,
     Alternative,
-    KBEvidence,
     BatchClassifyRequest,
     FeedbackRequest,
-    FeedbackResponse,
     RetrainRequest,
     EmbedRequest,
 )
