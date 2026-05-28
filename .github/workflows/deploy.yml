@@ -1,35 +1,55 @@
 name: Deploy to HuggingFace Spaces
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
     branches: [main]
+    types: [completed]
 
-# Only runs after CI passes on main
 jobs:
   deploy:
-    name: Push to HuggingFace Spaces
+    name: Upload to HuggingFace Spaces
     runs-on: ubuntu-latest
-    needs: []
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
         with:
-          fetch-depth: 0
-          lfs: true
+          python-version: '3.11'
 
-      - name: Configure git identity
-        run: |
-          git config user.email "ci@immuniwatch-ng.org"
-          git config user.name "ImmuniWatch CI"
+      - name: Install huggingface_hub
+        run: pip install huggingface_hub
 
-      - name: Push to HuggingFace Spaces
+      - name: Upload code to HuggingFace Spaces
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          # Set HF_SPACE_REPO in GitHub repo Settings → Secrets → Actions
-          # Format: YourHFUsername/your-space-name
-          # Example: AHFIDAILabs/immuniwatch-ml-service
           HF_SPACE_REPO: ${{ secrets.HF_SPACE_REPO }}
         run: |
-          git remote add hf "https://AHFIDAILabs:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_REPO}"
-          git push hf main --force
+          python - <<'EOF'
+          import os
+          from huggingface_hub import HfApi
+
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          api.upload_folder(
+              folder_path=".",
+              repo_id=os.environ["HF_SPACE_REPO"],
+              repo_type="space",
+              commit_message="Deploy from GitHub Actions",
+              ignore_patterns=[
+                  "models/**", "venv/**", "__pycache__/**",
+                  "**/*.pyc", ".env", "data/**",
+                  "notebooks/**", "**/*.ipynb",
+                  ".pytest_cache/**", ".git/**",
+                  "temp_test.py", "docker-compose.yml",
+                  "deploy_to_hf.py",
+                  "**/*.onnx", "**/*.onnx.data",
+                  "**/*.safetensors", "**/*.bin",
+                  "**/*.pt", "**/*.pkl",
+              ],
+          )
+          print("Deploy complete.")
+          EOF

@@ -39,6 +39,7 @@ def client():
          patch("src.models.classifier.classify", return_value=MOCK_CLASSIFY_RESULT), \
          patch("src.models.classifier.load", return_value=None), \
          patch("src.intelligence.rag.preload_embedder", return_value=None), \
+         patch("src.api.main._download_model_files", return_value=None), \
          patch("src.api.main.API_KEY", TEST_API_KEY):
         from src.api.main import app
         with TestClient(app, raise_server_exceptions=True) as c:
