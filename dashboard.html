@@ -892,7 +892,9 @@
 'use strict';
 
 /* ── Constants ─────────────────────────────────────────────── */
-const DEFAULT_BASE = 'http://localhost:8001';
+const DEFAULT_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? `http://${window.location.host}`
+  : window.location.origin;
 const LS_BASE_KEY  = 'iw_api_base';
 const LS_KEY_KEY   = 'iw_api_key';
 const HEALTH_INTERVAL_MS = 30_000;
