@@ -934,7 +934,10 @@ const el = {
 
 /* ── Storage helpers ───────────────────────────────────────── */
 function loadSettings() {
-  el.apiBase.value = localStorage.getItem(LS_BASE_KEY) || DEFAULT_BASE;
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  el.apiBase.value = isLocalhost
+    ? (localStorage.getItem(LS_BASE_KEY) || DEFAULT_BASE)
+    : DEFAULT_BASE;
   el.apiKey.value  = localStorage.getItem(LS_KEY_KEY)  || '';
 }
 
