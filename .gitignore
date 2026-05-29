@@ -3,7 +3,7 @@ venv/
 __pycache__/
 *.pyc
 .env
-models/
+/models/
 *.safetensors
 *.bin
 *.pt

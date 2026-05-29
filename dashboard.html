@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ImmuniWatch — ML Service Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0d1117;
+      --surface:     #161b22;
+      --surface2:    #1c2330;
+      --surface3:    #21262d;
+      --border:      #30363d;
+      --border2:     #3d444d;
+      --text:        #e6edf3;
+      --text-muted:  #7d8590;
+      --text-dim:    #4d555e;
+      --accent:      #2f81f7;
+      --accent-dim:  #1f6feb;
+      --green:       #3fb950;
+      --green-bg:    #0d2818;
+      --red:         #f85149;
+      --red-bg:      #2c0808;
+      --amber:       #e3b341;
+      --amber-bg:    #2c1f0a;
+      --gray-label:  #8b949e;
+      --gray-bg:     #1c1f24;
+      --radius:      8px;
+      --radius-lg:   12px;
+      --shadow:      0 8px 24px rgba(0,0,0,.4);
+    }
+
+    html { font-size: 15px; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ─── Layout ────────────────────────────────────────────────────────── */
+    .page-header {
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--surface);
+    }
+
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), #1a56c4);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .page-header h1 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: -.01em;
+    }
+
+    .page-header .subtitle {
+      font-size: .8rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 0;
+      min-height: calc(100vh - 57px);
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .main {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      overflow-y: auto;
+    }
+
+    /* ─── Cards ─────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: .75rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      background: var(--surface2);
+    }
+
+    .card-header h2 {
+      font-size: .8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+    }
+
+    .card-header .card-icon {
+      font-size: .9rem;
+    }
+
+    .card-body {
+      padding: 1.25rem;
+    }
+
+    /* ─── Form Elements ──────────────────────────────────────────────────── */
+    label {
+      display: block;
+      font-size: .8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: .35rem;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    textarea,
+    select {
+      width: 100%;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: inherit;
+      font-size: .875rem;
+      padding: .55rem .75rem;
+      outline: none;
+      transition: border-color .15s;
+      appearance: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(47,129,247,.15);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.5;
+    }
+
+    select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237d8590' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right .75rem center;
+      padding-right: 2.2rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+    }
+
+    .form-group { margin-bottom: .9rem; }
+    .form-group:last-child { margin-bottom: 0; }
+
+    /* ─── Buttons ────────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      padding: .55rem 1.1rem;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: .875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      transition: background .15s, opacity .15s, transform .08s;
+    }
+
+    .btn:active { transform: scale(.97); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-dim); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-secondary:hover { background: var(--border); }
+
+    .btn-full { width: 100%; }
+
+    /* ─── Status Indicator ───────────────────────────────────────────────── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .7rem 1.25rem;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background .4s;
+    }
+
+    .status-dot.ok      { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-dot.loading { background: var(--amber); animation: pulse 1.2s ease-in-out infinite; }
+    .status-dot.error   { background: var(--red); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .35; }
+    }
+
+    .status-text { font-size: .82rem; color: var(--text-muted); }
+    .status-text strong { color: var(--text); }
+
+    .status-meta {
+      margin-left: auto;
+      font-size: .78rem;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ─── Wake-up Banner ─────────────────────────────────────────────────── */
+    .wake-banner {
+      display: none;
+      align-items: center;
+      gap: .75rem;
+      padding: .9rem 1.25rem;
+      background: var(--amber-bg);
+      border: 1px solid var(--amber);
+      border-radius: var(--radius);
+      font-size: .875rem;
+      color: var(--amber);
+    }
+
+    .wake-banner.visible { display: flex; }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(227,179,65,.3);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Result Panel ───────────────────────────────────────────────────── */
+    .result-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      padding: 2.5rem;
+      color: var(--text-dim);
+      font-size: .875rem;
+      text-align: center;
+    }
+
+    .result-empty .empty-icon { font-size: 2rem; }
+
+    .label-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: .3rem .8rem;
+      border-radius: 100px;
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .badge-mis   { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(248,81,73,.3); }
+    .badge-fac   { background: var(--green-bg);  color: var(--green); border: 1px solid rgba(63,185,80,.3); }
+    .badge-irr   { background: var(--gray-bg);   color: var(--gray-label); border: 1px solid var(--border); }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+      margin-top: 1rem;
+    }
+
+    .result-item {
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .75rem 1rem;
+    }
+
+    .result-item .ri-label {
+      font-size: .72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: .25rem;
+    }
+
+    .result-item .ri-value {
+      font-size: 1.05rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .conf-bar-wrap {
+      margin-top: .9rem;
+    }
+
+    .conf-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: .78rem;
+      color: var(--text-muted);
+      margin-bottom: .35rem;
+    }
+
+    .conf-bar-track {
+      height: 8px;
+      background: var(--surface3);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .conf-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      transition: width .5s ease;
+    }
+
+    .fill-mis { background: linear-gradient(90deg, #c62828, var(--red)); }
+    .fill-fac { background: linear-gradient(90deg, #2e7d32, var(--green)); }
+    .fill-irr { background: linear-gradient(90deg, #424242, var(--gray-label)); }
+
+    .alt-labels {
+      margin-top: 1rem;
+    }
+
+    .alt-labels h4 {
+      font-size: .78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: .6rem;
+    }
+
+    .alt-row {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: .45rem;
+    }
+
+    .alt-name {
+      font-size: .8rem;
+      font-weight: 500;
+      min-width: 110px;
+    }
+
+    .alt-bar-track {
+      flex: 1;
+      height: 6px;
+      background: var(--surface3);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .alt-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 100px;
+      transition: width .4s ease;
+    }
+
+    .alt-pct {
+      font-size: .78rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      min-width: 42px;
+      text-align: right;
+    }
+
+    /* ─── Metrics Panel ──────────────────────────────────────────────────── */
+    .metrics-overall {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .metric-card {
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .9rem 1rem;
+    }
+
+    .metric-card .mc-label {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+      margin-bottom: .3rem;
+    }
+
+    .metric-card .mc-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+    }
+
+    .metric-card .mc-unit {
+      font-size: .7rem;
+      color: var(--text-dim);
+      margin-top: .1rem;
+    }
+
+    /* ─── Table ──────────────────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .83rem;
+    }
+
+    thead th {
+      text-align: left;
+      padding: .5rem .9rem;
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-size: .72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .1s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+
+    td {
+      padding: .55rem .9rem;
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    .td-mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .8rem;
+    }
+
+    td.truncated {
+      max-width: 220px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-muted);
+    }
+
+    /* ─── Loading overlay ────────────────────────────────────────────────── */
+    .loading-block {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: 1.5rem;
+      color: var(--text-muted);
+      font-size: .875rem;
+    }
+
+    .spinner-sm {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* ─── Misc ───────────────────────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: .25rem 0;
+    }
+
+    .version-chip {
+      display: inline-block;
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      border-radius: 100px;
+      padding: .15rem .6rem;
+      font-size: .72rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+    }
+
+    .refresh-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: .75rem;
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .2rem .4rem;
+      border-radius: 4px;
+      transition: color .15s, background .15s;
+    }
+
+    .refresh-btn:hover { color: var(--text); background: var(--surface3); }
+
+    .err-msg {
+      font-size: .8rem;
+      color: var(--red);
+      margin-top: .5rem;
+      padding: .5rem .75rem;
+      background: var(--red-bg);
+      border-radius: var(--radius);
+      border: 1px solid rgba(248,81,73,.25);
+    }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+      .metrics-overall { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PAGE HEADER
+════════════════════════════════════════════════════════════ -->
+<header class="page-header">
+  <div class="logo-mark" aria-hidden="true">&#128737;</div>
+  <div>
+    <h1>ImmuniWatch Nigeria</h1>
+  </div>
+  <span class="subtitle">Local Testing Dashboard</span>
+</header>
+
+<!-- Wake-up banner (shown when 503 received) -->
+<div class="wake-banner" id="wakeBanner">
+  <div class="spinner"></div>
+  <span>Service is waking up, please wait&hellip; Retrying in <strong id="wakeCountdown">5</strong>s</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN LAYOUT
+════════════════════════════════════════════════════════════ -->
+<div class="layout">
+
+  <!-- ── SIDEBAR ────────────────────────────────────────────── -->
+  <aside class="sidebar">
+
+    <!-- Settings -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">&#9881;</span>
+        <h2>Settings</h2>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label for="apiBase">API Base URL</label>
+          <input type="text" id="apiBase" placeholder="https://…" spellcheck="false" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label for="apiKey">API Key</label>
+          <input type="password" id="apiKey" placeholder="X-ML-API-Key value" autocomplete="off" />
+        </div>
+        <button class="btn btn-secondary btn-full" id="saveSettings">Save to localStorage</button>
+        <div id="settingsMsg" style="margin-top:.5rem;font-size:.78rem;color:var(--green);display:none;">Settings saved.</div>
+      </div>
+    </div>
+
+    <!-- Health status -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">&#128152;</span>
+        <h2>Health</h2>
+        <button class="refresh-btn" id="refreshHealth" title="Refresh now">&#8635; Refresh</button>
+      </div>
+      <div id="healthStatus">
+        <div class="status-bar">
+          <div class="status-dot loading" id="statusDot"></div>
+          <span class="status-text" id="statusText">Checking&hellip;</span>
+          <span class="status-meta" id="statusMeta"></span>
+        </div>
+        <div class="card-body" id="healthDetails" style="padding-top:.75rem;font-size:.82rem;color:var(--text-muted);">
+          <div class="loading-block"><div class="spinner-sm"></div>Loading health data&hellip;</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Classification Form -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">&#128269;</span>
+        <h2>Classify</h2>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label for="postContent">Post Content</label>
+          <textarea id="postContent" rows="6" placeholder="Paste the social media post text here…"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label for="platform">Platform</label>
+            <select id="platform">
+              <option value="twitter">Twitter / X</option>
+              <option value="facebook">Facebook</option>
+              <option value="youtube">YouTube</option>
+              <option value="bluesky">Bluesky</option>
+              <option value="submission">Submission</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label for="language">Language</label>
+            <select id="language">
+              <option value="">Auto-detect</option>
+              <option value="en">en — English</option>
+              <option value="pcm">pcm — Pidgin</option>
+              <option value="ha">ha — Hausa</option>
+              <option value="yo">yo — Yoruba</option>
+              <option value="ig">ig — Igbo</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:1rem;">
+          <button class="btn btn-primary btn-full" id="classifyBtn">
+            <span id="classifyBtnIcon">&#9654;</span> Classify Post
+          </button>
+        </div>
+        <div id="classifyErr" class="err-msg" style="display:none;"></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ── MAIN CONTENT ───────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- Classification Result -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">&#127919;</span>
+        <h2>Classification Result</h2>
+        <span id="resultVersion" style="margin-left:auto;"></span>
+      </div>
+      <div id="resultBody">
+        <div class="result-empty">
+          <div class="empty-icon">&#128196;</div>
+          <div>Submit a post to see the classification result.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">&#128202;</span>
+        <h2>Model Metrics</h2>
+        <button class="refresh-btn" id="refreshMetrics" title="Refresh metrics">&#8635; Refresh</button>
+      </div>
+      <div id="metricsBody">
+        <div class="loading-block"><div class="spinner-sm"></div>Loading metrics&hellip;</div>
+      </div>
+    </div>
+
+    <!-- Recent Classifications -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">&#128203;</span>
+        <h2>Recent Classifications</h2>
+        <span style="margin-left:auto;font-size:.75rem;color:var(--text-dim);">last 10 — in-memory only</span>
+      </div>
+      <div class="table-wrap">
+        <table id="historyTable">
+          <thead>
+            <tr>
+              <th>Content</th>
+              <th>Label</th>
+              <th>Confidence</th>
+              <th>Platform</th>
+              <th>Language</th>
+              <th>Time (ms)</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr>
+              <td colspan="6" style="text-align:center;color:var(--text-dim);padding:1.5rem;">
+                No classifications yet.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /.layout -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ── Constants ─────────────────────────────────────────────── */
+const DEFAULT_BASE = 'https://ahfidailabs-immuniwatch-ml-service.hf.space';
+const LS_BASE_KEY  = 'iw_api_base';
+const LS_KEY_KEY   = 'iw_api_key';
+const HEALTH_INTERVAL_MS = 30_000;
+const WAKE_RETRY_SEC     = 5;
+
+/* ── State ─────────────────────────────────────────────────── */
+let wakeRetryTimer   = null;
+let wakeCountdownInt = null;
+let healthIntervalId = null;
+const history = [];   // last 10 results
+
+/* ── DOM Shortcuts ─────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+
+const el = {
+  apiBase:         $('apiBase'),
+  apiKey:          $('apiKey'),
+  saveSettings:    $('saveSettings'),
+  settingsMsg:     $('settingsMsg'),
+  statusDot:       $('statusDot'),
+  statusText:      $('statusText'),
+  statusMeta:      $('statusMeta'),
+  healthDetails:   $('healthDetails'),
+  refreshHealth:   $('refreshHealth'),
+  wakeBanner:      $('wakeBanner'),
+  wakeCountdown:   $('wakeCountdown'),
+  postContent:     $('postContent'),
+  platform:        $('platform'),
+  language:        $('language'),
+  classifyBtn:     $('classifyBtn'),
+  classifyBtnIcon: $('classifyBtnIcon'),
+  classifyErr:     $('classifyErr'),
+  resultBody:      $('resultBody'),
+  resultVersion:   $('resultVersion'),
+  refreshMetrics:  $('refreshMetrics'),
+  metricsBody:     $('metricsBody'),
+  historyBody:     $('historyBody'),
+};
+
+/* ── Storage helpers ───────────────────────────────────────── */
+function loadSettings() {
+  el.apiBase.value = localStorage.getItem(LS_BASE_KEY) || DEFAULT_BASE;
+  el.apiKey.value  = localStorage.getItem(LS_KEY_KEY)  || '';
+}
+
+function getBase()   { return (el.apiBase.value || DEFAULT_BASE).replace(/\/+$/, ''); }
+function getApiKey() { return el.apiKey.value.trim(); }
+
+el.saveSettings.addEventListener('click', () => {
+  localStorage.setItem(LS_BASE_KEY, el.apiBase.value.trim());
+  localStorage.setItem(LS_KEY_KEY,  el.apiKey.value.trim());
+  el.settingsMsg.style.display = 'block';
+  setTimeout(() => { el.settingsMsg.style.display = 'none'; }, 2000);
+  // re-init health + metrics with new base
+  startHealthPolling();
+  loadMetrics();
+});
+
+/* ── Fetch helpers ─────────────────────────────────────────── */
+async function apiFetch(path, options = {}) {
+  const url = getBase() + path;
+  const key = getApiKey();
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (key) headers['X-ML-API-Key'] = key;
+  const response = await fetch(url, { ...options, headers });
+  return response;
+}
+
+/* ── Wake-up banner ────────────────────────────────────────── */
+function showWakeBanner(retryFn) {
+  el.wakeBanner.classList.add('visible');
+  let sec = WAKE_RETRY_SEC;
+  el.wakeCountdown.textContent = sec;
+
+  clearInterval(wakeCountdownInt);
+  clearTimeout(wakeRetryTimer);
+
+  wakeCountdownInt = setInterval(() => {
+    sec -= 1;
+    el.wakeCountdown.textContent = sec;
+    if (sec <= 0) clearInterval(wakeCountdownInt);
+  }, 1000);
+
+  wakeRetryTimer = setTimeout(() => {
+    el.wakeBanner.classList.remove('visible');
+    retryFn();
+  }, WAKE_RETRY_SEC * 1000);
+}
+
+function hideWakeBanner() {
+  el.wakeBanner.classList.remove('visible');
+  clearInterval(wakeCountdownInt);
+  clearTimeout(wakeRetryTimer);
+}
+
+/* ── Health check ──────────────────────────────────────────── */
+async function checkHealth() {
+  setStatusLoading();
+  try {
+    const res = await apiFetch('/health');
+    if (res.status === 503) {
+      setStatusError('Service loading / waking up');
+      el.healthDetails.innerHTML = '<div style="padding:.5rem 0;font-size:.82rem;color:var(--amber);">Model is still loading. Retrying shortly…</div>';
+      return;
+    }
+    if (!res.ok) {
+      setStatusError('Unexpected error (' + res.status + ')');
+      el.healthDetails.innerHTML = '';
+      return;
+    }
+    const data = await res.json();
+    renderHealth(data);
+    hideWakeBanner();
+  } catch (err) {
+    setStatusError('Unreachable — ' + err.message);
+    el.healthDetails.innerHTML = '<div style="padding:.5rem 0;font-size:.82rem;color:var(--text-dim);">Could not connect. Check the API Base URL in Settings.</div>';
+  }
+}
+
+function setStatusLoading() {
+  el.statusDot.className = 'status-dot loading';
+  el.statusText.innerHTML = 'Checking&hellip;';
+  el.statusMeta.textContent = '';
+}
+
+function setStatusError(msg) {
+  el.statusDot.className = 'status-dot error';
+  el.statusText.innerHTML = '<strong style="color:var(--red)">Unavailable</strong>';
+  el.statusMeta.textContent = msg;
+}
+
+function renderHealth(data) {
+  el.statusDot.className = 'status-dot ok';
+  el.statusText.innerHTML = '<strong style="color:var(--green)">Online</strong>';
+  el.statusMeta.textContent = 'v' + (data.model_version || '—') + ' · uptime ' + fmtUptime(data.uptime_s);
+
+  const rows = [
+    ['Status',        data.status || '—'],
+    ['Model Loaded',  data.model_loaded ? 'Yes' : 'No'],
+    ['Model Version', data.model_version || '—'],
+    ['Device',        data.device || '—'],
+    ['Uptime',        fmtUptime(data.uptime_s)],
+    ['Checked at',    new Date().toLocaleTimeString()],
+  ];
+
+  el.healthDetails.innerHTML = rows.map(([k, v]) => `
+    <div style="display:flex;justify-content:space-between;padding:.28rem 0;border-bottom:1px solid var(--border);">
+      <span style="color:var(--text-muted);">${k}</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:.8rem;">${v}</span>
+    </div>`).join('');
+}
+
+function fmtUptime(sec) {
+  if (!sec && sec !== 0) return '—';
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) return h + 'h ' + m + 'm';
+  if (m > 0) return m + 'm ' + s + 's';
+  return s + 's';
+}
+
+function startHealthPolling() {
+  clearInterval(healthIntervalId);
+  checkHealth();
+  healthIntervalId = setInterval(checkHealth, HEALTH_INTERVAL_MS);
+}
+
+el.refreshHealth.addEventListener('click', checkHealth);
+
+/* ── Classification ────────────────────────────────────────── */
+el.classifyBtn.addEventListener('click', runClassify);
+
+async function runClassify() {
+  const content  = el.postContent.value.trim();
+  const platform = el.platform.value;
+  const language = el.language.value || null;
+
+  el.classifyErr.style.display = 'none';
+  if (!content) {
+    showClassifyErr('Post content cannot be empty.');
+    return;
+  }
+
+  setClassifyLoading(true);
+  el.resultBody.innerHTML = '<div class="loading-block"><div class="spinner-sm"></div>Classifying&hellip;</div>';
+
+  const body = {
+    post_id:  'dash-' + Date.now(),
+    content,
+    platform,
+    language,
+    kb_snippets: [],
+  };
+
+  try {
+    const res = await apiFetch('/classify', {
+      method: 'POST',
+      body:   JSON.stringify(body),
+    });
+
+    if (res.status === 503) {
+      el.resultBody.innerHTML = '<div class="result-empty"><div class="empty-icon">&#128336;</div><div>Service waking up — retrying&hellip;</div></div>';
+      showWakeBanner(() => runClassify());
+      setClassifyLoading(false);
+      return;
+    }
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || res.statusText);
+    }
+
+    const data = await res.json();
+    renderResult(data);
+    addHistory(data, content, platform);
+    hideWakeBanner();
+  } catch (err) {
+    showClassifyErr(err.message);
+    el.resultBody.innerHTML = '<div class="result-empty"><div class="empty-icon">&#9888;</div><div>Classification failed.</div></div>';
+  } finally {
+    setClassifyLoading(false);
+  }
+}
+
+function setClassifyLoading(on) {
+  el.classifyBtn.disabled       = on;
+  el.classifyBtnIcon.textContent = on ? '' : '▶';
+  if (on) {
+    el.classifyBtn.innerHTML = '<div class="spinner-sm" style="border-top-color:#fff;"></div> Classifying…';
+  } else {
+    el.classifyBtn.innerHTML = '<span id="classifyBtnIcon">▶</span> Classify Post';
+  }
+}
+
+function showClassifyErr(msg) {
+  el.classifyErr.textContent    = msg;
+  el.classifyErr.style.display  = 'block';
+}
+
+function badgeClass(label) {
+  if (!label) return 'badge-irr';
+  const l = label.toLowerCase();
+  if (l.includes('misinfo')) return 'badge-mis';
+  if (l.includes('factual')) return 'badge-fac';
+  return 'badge-irr';
+}
+
+function fillClass(label) {
+  if (!label) return 'fill-irr';
+  const l = label.toLowerCase();
+  if (l.includes('misinfo')) return 'fill-mis';
+  if (l.includes('factual')) return 'fill-fac';
+  return 'fill-irr';
+}
+
+function pct(v) { return (v * 100).toFixed(1) + '%'; }
+
+function renderResult(d) {
+  const bc  = badgeClass(d.label);
+  const fc  = fillClass(d.label);
+  const conf = (d.confidence * 100).toFixed(1);
+  const langDisplay = d.language || 'auto';
+
+  el.resultVersion.innerHTML = d.model_version
+    ? `<span class="version-chip">${d.model_version}</span>` : '';
+
+  const altRows = (d.alternatives || []).map(a => `
+    <div class="alt-row">
+      <span class="alt-name">${escHtml(a.label)}</span>
+      <div class="alt-bar-track"><div class="alt-bar-fill" style="width:${(a.confidence*100).toFixed(1)}%"></div></div>
+      <span class="alt-pct">${(a.confidence*100).toFixed(1)}%</span>
+    </div>`).join('');
+
+  el.resultBody.innerHTML = `
+    <div style="padding:1.25rem;">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;">
+        <span class="label-badge ${bc}">${escHtml(d.label || '—')}</span>
+        <span style="font-size:.82rem;color:var(--text-muted);">Post ID: <code style="font-family:'JetBrains Mono',monospace;font-size:.78rem;">${escHtml(d.post_id)}</code></span>
+      </div>
+
+      <div class="conf-bar-wrap">
+        <div class="conf-bar-label">
+          <span>Confidence</span>
+          <strong style="color:var(--text);">${conf}%</strong>
+        </div>
+        <div class="conf-bar-track">
+          <div class="conf-bar-fill ${fc}" style="width:${conf}%"></div>
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-item">
+          <div class="ri-label">Entropy</div>
+          <div class="ri-value" style="font-size:.95rem;">${(d.entropy || 0).toFixed(4)}</div>
+        </div>
+        <div class="result-item">
+          <div class="ri-label">Language</div>
+          <div class="ri-value" style="font-size:.95rem;">${escHtml(langDisplay)}</div>
+        </div>
+        <div class="result-item">
+          <div class="ri-label">Processing Time</div>
+          <div class="ri-value" style="font-size:.95rem;">${d.processing_ms ?? '—'} ms</div>
+        </div>
+        <div class="result-item">
+          <div class="ri-label">Platform</div>
+          <div class="ri-value" style="font-size:.95rem;">${escHtml(d.platform || '—')}</div>
+        </div>
+      </div>
+
+      ${altRows ? `<div class="alt-labels"><h4>Alternative Labels</h4>${altRows}</div>` : ''}
+    </div>`;
+}
+
+/* ── Metrics ────────────────────────────────────────────────── */
+async function loadMetrics() {
+  el.metricsBody.innerHTML = '<div class="loading-block"><div class="spinner-sm"></div>Loading metrics&hellip;</div>';
+  try {
+    const res = await apiFetch('/metrics');
+    if (res.status === 503) {
+      el.metricsBody.innerHTML = '<div style="padding:1rem;font-size:.82rem;color:var(--amber);">Service not ready. Try again shortly.</div>';
+      return;
+    }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    renderMetrics(data);
+  } catch (err) {
+    el.metricsBody.innerHTML = `<div style="padding:1rem;font-size:.82rem;color:var(--text-dim);">Could not load metrics: ${escHtml(err.message)}</div>`;
+  }
+}
+
+function renderMetrics(d) {
+  const o = d.overall || {};
+  const byLang = d.by_language || {};
+
+  const langRows = Object.entries(byLang).map(([lang, m]) => `
+    <tr>
+      <td class="td-mono">${escHtml(lang)}</td>
+      <td class="td-mono">${fmt3(m.macro_f1)}</td>
+      <td class="td-mono">${fmt3(m.recall)}</td>
+      <td class="td-mono">${fmt3(m.psi)}</td>
+    </tr>`).join('');
+
+  el.metricsBody.innerHTML = `
+    <div style="padding:1.25rem 1.25rem .5rem;">
+      <div style="margin-bottom:.9rem;display:flex;align-items:center;gap:.5rem;">
+        <span style="font-size:.78rem;color:var(--text-muted);">Model Version</span>
+        <span class="version-chip">${escHtml(d.model_version || '—')}</span>
+        <span style="margin-left:auto;font-size:.72rem;color:var(--text-dim);">
+          Computed: ${d.computed_at ? new Date(d.computed_at).toLocaleTimeString() : '—'}
+        </span>
+      </div>
+      <div class="metrics-overall">
+        <div class="metric-card">
+          <div class="mc-label">Macro F1</div>
+          <div class="mc-value">${fmt3(o.macro_f1)}</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-label">Recall</div>
+          <div class="mc-value">${fmt3(o.recall)}</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-label">Precision</div>
+          <div class="mc-value">${fmt3(o.precision)}</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-label">Latency p95</div>
+          <div class="mc-value">${o.latency_p95_ms ?? '—'}</div>
+          <div class="mc-unit">milliseconds</div>
+        </div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Language</th>
+            <th>Macro F1</th>
+            <th>Recall</th>
+            <th>PSI</th>
+          </tr>
+        </thead>
+        <tbody>${langRows || '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:1rem;">No per-language data.</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+function fmt3(v) {
+  if (v === undefined || v === null) return '—';
+  return Number(v).toFixed(3);
+}
+
+el.refreshMetrics.addEventListener('click', loadMetrics);
+
+/* ── History ────────────────────────────────────────────────── */
+function addHistory(result, rawContent, platform) {
+  history.unshift({
+    content:    rawContent,
+    label:      result.label,
+    confidence: result.confidence,
+    platform:   platform,
+    language:   result.language || 'auto',
+    ms:         result.processing_ms,
+  });
+  if (history.length > 10) history.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  if (!history.length) {
+    el.historyBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:1.5rem;">No classifications yet.</td></tr>`;
+    return;
+  }
+
+  el.historyBody.innerHTML = history.map(h => {
+    const trunc   = h.content.length > 60 ? h.content.slice(0, 60) + '…' : h.content;
+    const bc      = badgeClass(h.label);
+    const confPct = (h.confidence * 100).toFixed(1) + '%';
+    return `
+      <tr>
+        <td class="truncated" title="${escHtml(h.content)}">${escHtml(trunc)}</td>
+        <td><span class="label-badge ${bc}" style="font-size:.72rem;padding:.2rem .6rem;">${escHtml(h.label || '—')}</span></td>
+        <td class="td-mono">${confPct}</td>
+        <td class="td-mono">${escHtml(h.platform)}</td>
+        <td class="td-mono">${escHtml(h.language)}</td>
+        <td class="td-mono">${h.ms ?? '—'}</td>
+      </tr>`;
+  }).join('');
+}
+
+/* ── Utility ────────────────────────────────────────────────── */
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ── Init ───────────────────────────────────────────────────── */
+(function init() {
+  loadSettings();
+  startHealthPolling();
+  loadMetrics();
+})();
+</script>
+</body>
+</html>

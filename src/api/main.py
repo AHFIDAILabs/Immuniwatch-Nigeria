@@ -26,6 +26,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 load_dotenv()
@@ -129,6 +130,17 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url=None,
+)
+
+# ---------------------------------------------------------------------------
+# CORS — allow any origin so the local dashboard (file://) can call the API
+# ---------------------------------------------------------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
