@@ -13,3 +13,4 @@ notebooks/
 data/
 temp_test.py
 docker-compose.yml
+.claude/

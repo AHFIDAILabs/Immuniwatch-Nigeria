@@ -27,6 +27,7 @@ class ClassifyRequest(BaseModel):
     post_id:     str
     content:     str = Field(..., max_length=4096)
     language:    Optional[str] = None
+    location:    Optional[str] = None   # raw location string from connector (profile or metadata)
     platform:    str
     context:     Optional[str] = None
     kb_snippets: List[str] = []

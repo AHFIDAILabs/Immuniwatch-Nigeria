@@ -87,16 +87,18 @@ class YouTubeConnector(BaseConnector):
                         self._safe_on_post(post)
 
     def _search_videos(self, query: str) -> List[str]:
-        """Search YouTube. Returns list of video IDs."""
+        """Search YouTube for recent videos. Returns list of video IDs."""
         try:
             resp = requests.get(
                 f"{YOUTUBE_API_BASE}/search",
                 params={
-                    "key":        self.api_key,
-                    "q":          query,
-                    "type":       "video",
-                    "part":       "id",
-                    "maxResults": 5,
+                    "key":           self.api_key,
+                    "q":             query,
+                    "type":          "video",
+                    "part":          "id",
+                    "maxResults":    10,
+                    "order":         "relevance",
+                    "videoEmbeddable": "true",   # embeddable videos more likely to have comments
                 },
                 timeout=10,
             )
@@ -123,8 +125,30 @@ class YouTubeConnector(BaseConnector):
                 },
                 timeout=10,
             )
+
+            if resp.status_code == 403:
+                # Parse the reason — commentsDisabled is expected and not an error
+                reason = ""
+                try:
+                    errors = resp.json().get("error", {}).get("errors", [])
+                    reason = errors[0].get("reason", "") if errors else ""
+                except Exception:
+                    pass
+
+                if reason == "commentsDisabled":
+                    log.debug("Comments disabled for video %s — skipping", video_id)
+                elif reason == "quotaExceeded":
+                    log.warning("YouTube API quota exceeded — pausing comment fetch")
+                else:
+                    log.debug("YouTube comments unavailable for video %s (403 %s)", video_id, reason)
+                return []
+
             resp.raise_for_status()
             return resp.json().get("items", [])
+
+        except requests.HTTPError as e:
+            log.debug("YouTube comments HTTP error for video %s: %s", video_id, e)
+            return []
         except Exception as e:
             log.warning("YouTube comments failed for video %s: %s", video_id, e)
             return []
@@ -155,10 +179,13 @@ class YouTubeConnector(BaseConnector):
                 content_text= content,
                 content_type= "TEXT",
                 author_hash=  hash_author(author_id),
-                language=     "en",   # YouTube does not reliably provide language
+                language=     None,
                 timestamp=    ts,
                 ingestion_ts= datetime.now(timezone.utc),
                 raw_url=      f"https://www.youtube.com/watch?v={video_id}",
+                # Channel country requires a separate channels.list API call
+                # (costs additional quota units). On free tier the classifier
+                # extracts state from the comment text as fallback.
                 location_raw= None,
                 likes=        snippet.get("likeCount"),
                 shares=       None,

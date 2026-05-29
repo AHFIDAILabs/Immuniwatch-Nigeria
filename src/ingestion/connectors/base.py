@@ -25,7 +25,7 @@ class RawPost:
     content_text: str
     content_type: str      # TEXT|IMAGE_WITH_CAPTION|VIDEO|AUDIO
     author_hash:  str      # SHA-256 of author ID — no PII stored
-    language:     str      # en|pcm|ha|yo|ig
+    language:     Optional[str]   # en|pcm|ha|yo|ig — None means auto-detect
     timestamp:    datetime
     ingestion_ts: datetime
     raw_url:      Optional[str] = None

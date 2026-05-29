@@ -3,6 +3,7 @@ ImmuniWatch Nigeria — API Routes
 ==================================
 """
 
+import collections
 import json
 import logging
 import os
@@ -44,6 +45,11 @@ FEEDBACK_PATH = Path("models/feedback_queue.jsonl")
 _jobs: dict = {}
 _jobs_lock = threading.Lock()
 
+# Live feed — last 100 classified posts, newest first
+_recent_feed: collections.deque = collections.deque(maxlen=100)
+_feed_lock = threading.Lock()
+_feed_total = 0  # cumulative count, never resets
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -73,7 +79,7 @@ def _classify_one(req: ClassifyRequest) -> ClassifyResponse:
     result = classify(
         text=req.content,
         language=req.language,
-        location=None,
+        location=req.location,
     )
 
     kb_evidence = [
@@ -81,7 +87,7 @@ def _classify_one(req: ClassifyRequest) -> ClassifyResponse:
         for i, s in enumerate(req.kb_snippets)
     ]
 
-    return ClassifyResponse(
+    response = ClassifyResponse(
         post_id=req.post_id,
         label=result["label"],
         confidence=result["confidence"],
@@ -94,6 +100,24 @@ def _classify_one(req: ClassifyRequest) -> ClassifyResponse:
         processing_ms=result["processing_ms"],
         kb_evidence=kb_evidence,
     )
+
+    # Record in live feed
+    global _feed_total
+    with _feed_lock:
+        _feed_total += 1
+        _recent_feed.appendleft({
+            "post_id":         req.post_id,
+            "content_snippet": req.content[:140],
+            "label":           result["label"],
+            "confidence":      round(result["confidence"], 4),
+            "entropy":         round(result["entropy"], 4),
+            "language":        result["language"],
+            "state":           result.get("state"),
+            "platform":        req.platform,
+            "classified_at":   _now(),
+        })
+
+    return response
 
 
 # ---------------------------------------------------------------------------
@@ -262,7 +286,24 @@ async def embed_batch_endpoint(req: EmbedBatchRequest):
 
 
 # ---------------------------------------------------------------------------
-# 7. GET /metrics — cached compute, < 200ms, matches spec Section 2 schema
+# 7. GET /recent — live feed of last N classified posts (in-memory)
+# ---------------------------------------------------------------------------
+
+@router.get("/recent")
+async def recent_classifications(limit: int = 50):
+    """Returns the last N classified posts, newest first. Resets on restart."""
+    limit = max(1, min(limit, 100))
+    with _feed_lock:
+        feed = list(_recent_feed)[:limit]
+    return {
+        "posts":       feed,
+        "count":       len(feed),
+        "total_since_start": _feed_total,
+    }
+
+
+# ---------------------------------------------------------------------------
+# 9. GET /metrics — cached compute, < 200ms, matches spec Section 2 schema
 # ---------------------------------------------------------------------------
 
 @router.get("/metrics")

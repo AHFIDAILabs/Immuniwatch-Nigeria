@@ -44,6 +44,9 @@ class BlueskyConnector(BaseConnector):
         self._thread: Optional[threading.Thread] = None
         self._dedup        = Deduplicator()
         self._access_token: Optional[str] = None
+        # Cache author DID → raw location string (None = already checked, no location)
+        # Prevents re-fetching the same author profile on every poll cycle
+        self._profile_location_cache: dict = {}
 
         if not self.handle or not self.app_password:
             log.warning(
@@ -156,6 +159,41 @@ class BlueskyConnector(BaseConnector):
             log.warning("Bluesky search failed for '%s': %s", term, e)
             return []
 
+    def _get_author_location(self, author_did: str) -> Optional[str]:
+        """
+        Fetch raw location string from the author's Bluesky profile.
+        Checks the dedicated `location` field first, then falls back to `description`.
+        Results are cached per DID — each unique author is fetched at most once
+        per connector lifetime.
+        Returns None if unavailable or on any error.
+        """
+        if author_did in self._profile_location_cache:
+            return self._profile_location_cache[author_did]
+
+        location = None
+        if self._access_token:
+            try:
+                resp = requests.get(
+                    f"{BSKY_API_BASE}/app.bsky.actor.getProfile",
+                    headers={"Authorization": f"Bearer {self._access_token}"},
+                    params={"actor": author_did},
+                    timeout=5,
+                )
+                if resp.ok:
+                    profile = resp.json()
+                    # `location` is an explicit profile field on some clients;
+                    # fall back to `description` (bio) which often contains city/state
+                    location = (
+                        profile.get("location")
+                        or profile.get("description")
+                        or None
+                    )
+            except Exception:
+                pass  # network error — cache None so we don't retry immediately
+
+        self._profile_location_cache[author_did] = location
+        return location
+
     def _to_raw_post(self, item: dict) -> Optional[RawPost]:
         """Convert Bluesky post item to RawPost."""
         try:
@@ -166,7 +204,8 @@ class BlueskyConnector(BaseConnector):
                 return None
 
             post_id    = item.get("uri", "")
-            author_did = item.get("author", {}).get("did", post_id)
+            author     = item.get("author", {})
+            author_did = author.get("did", post_id)
 
             ts_str = record.get("createdAt", "")
             try:
@@ -174,17 +213,21 @@ class BlueskyConnector(BaseConnector):
             except Exception:
                 ts = datetime.now(timezone.utc)
 
+            # Location: profile field / bio first, post text is the fallback
+            # handled by classifier._resolve_state()
+            location_raw = self._get_author_location(author_did)
+
             return RawPost(
                 post_id=      post_id,
                 platform=     "bluesky",
                 content_text= content,
                 content_type= "TEXT",
                 author_hash=  hash_author(author_did),
-                language=     "en",
+                language=     None,
                 timestamp=    ts,
                 ingestion_ts= datetime.now(timezone.utc),
                 raw_url=      None,
-                location_raw= None,
+                location_raw= location_raw,
                 likes=        item.get("likeCount"),
                 shares=       item.get("repostCount"),
             )

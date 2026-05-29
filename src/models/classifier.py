@@ -42,6 +42,33 @@ LANG_NORMALISE = {
 }
 
 # ---------------------------------------------------------------------------
+# Nigerian language keyword detectors
+# Used when connector does not provide a reliable language code.
+# langdetect cannot distinguish Nigerian languages, so we use lexical cues.
+# ---------------------------------------------------------------------------
+_HA_RE = re.compile(
+    r'\b(gaskia|rigakafi|rigakafin|mallam|sannu|nagode|inshallah|yanzu|yau|jiya|'
+    r'lafiya|haba|karya|kowa|komai|hanya|birni|ruwa|abinci|zakar|wallahi|toh|barka|'
+    r'gida|mutane|sarki|masha|bazum|bazoum|kasuwa|talaka|gwamnati|kasa|duniya|'
+    r'Allah ya|masha allah|ya allah|ya gafarta|ya jikan|ya taimaka)\b',
+    re.IGNORECASE,
+)
+_YO_CHAR_RE = re.compile(r'[ọẹàáèéêâ]')      # tonal diacritics = strong Yoruba signal
+_YO_WORD_RE = re.compile(
+    r'\b(naa|awon|fun|si|ati|tabi|jẹ|ọlọrun|ẹjọwọ|nínú|rẹ|wọn)\b',
+    re.IGNORECASE,
+)
+_IG_CHAR_RE = re.compile(r'[ụị]')              # Igbo-specific diacritics
+_IG_WORD_RE = re.compile(
+    r'\b(nke|ndi|bụ|dị|nwere|ndị|maka|ihe|oge|ụlọ|chi)\b',
+    re.IGNORECASE,
+)
+_PCM_RE = re.compile(
+    r'\b(dey|wetin|wahala|abeg|sabi|pikin|naija|una|vex|comot|oga|dem say|no be|e don)\b',
+    re.IGNORECASE,
+)
+
+# ---------------------------------------------------------------------------
 # Module-level singletons — loaded once at startup
 # ---------------------------------------------------------------------------
 _session = None      # onnxruntime.InferenceSession
@@ -170,21 +197,35 @@ def classify(text: str, language: Optional[str] = None,
 def _resolve_language(text: str, provided: Optional[str]) -> Optional[str]:
     """
     Return normalised language code.
-    Uses provided value from connector if available.
-    Falls back to langdetect for basic detection.
 
-    Note: langdetect does not support Hausa, Igbo, Yoruba, or Pidgin
-    reliably. When connector provides the language, that value is used
-    and is more accurate than detection.
+    Priority:
+    1. Trust connector-provided code only for non-English Nigerian languages
+       (connector-provided 'en' is unreliable — connectors hardcode it).
+    2. Score text against Nigerian language lexicons.
+    3. Fall back to langdetect for English vs. other.
     """
     if provided:
-        return LANG_NORMALISE.get(provided.lower(), provided.lower())
+        normed = LANG_NORMALISE.get(provided.lower(), provided.lower())
+        # If connector explicitly signals a Nigerian language, trust it
+        if normed in ("ha", "yo", "ig", "pcm"):
+            return normed
 
+    # Score each Nigerian language by keyword/character presence
+    ha_score  = len(_HA_RE.findall(text))
+    yo_score  = len(_YO_CHAR_RE.findall(text)) * 2 + len(_YO_WORD_RE.findall(text))
+    ig_score  = len(_IG_CHAR_RE.findall(text)) * 2 + len(_IG_WORD_RE.findall(text))
+    pcm_score = len(_PCM_RE.findall(text))
+
+    best_lang  = max(("ha", ha_score), ("yo", yo_score),
+                     ("ig", ig_score), ("pcm", pcm_score),
+                     key=lambda x: x[1])
+    if best_lang[1] >= 2:
+        return best_lang[0]
+
+    # Fall back to langdetect for English detection
     try:
         from langdetect import detect
         detected = detect(text)
-        # langdetect returns 'en' for English — map others to None
-        # since it cannot distinguish Nigerian languages
         return "en" if detected == "en" else None
     except Exception:
         return None
@@ -196,15 +237,20 @@ def _resolve_language(text: str, provided: Optional[str]) -> Optional[str]:
 def _resolve_state(text: str, provided: Optional[str]) -> Optional[str]:
     """
     Return Nigerian state name.
-    Uses provided value from connector if available.
-    Falls back to keyword extraction from post text.
+
+    Priority:
+    1. Pattern match on connector-provided location string (user profile / metadata).
+       This may be a raw bio or partial address — run the regex, don't trust verbatim.
+    2. Pattern match on post text (fallback).
     """
     if provided:
-        return provided
+        match = _STATE_PATTERN.search(provided)
+        if match:
+            state = match.group(1).title()
+            return "FCT" if state.lower() == "abuja" else state
 
     match = _STATE_PATTERN.search(text)
     if match:
-        # Normalise FCT/Abuja to one value
         state = match.group(1).title()
         return "FCT" if state.lower() == "abuja" else state
 

@@ -532,6 +532,142 @@
       flex-shrink: 0;
     }
 
+    /* ─── Live Feed ─────────────────────────────────────────────────────── */
+    .feed-controls {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-left: auto;
+    }
+
+    .feed-counter {
+      font-size: .72rem;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .pause-btn {
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: .72rem;
+      padding: .2rem .55rem;
+      transition: background .15s, color .15s;
+    }
+
+    .pause-btn:hover { background: var(--border2); color: var(--text); }
+    .pause-btn.paused { color: var(--amber); border-color: var(--amber); }
+
+    .feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+
+    .feed-item {
+      display: grid;
+      grid-template-columns: 68px 86px 110px 46px 72px 1fr;
+      align-items: center;
+      gap: .5rem;
+      padding: .6rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      transition: background .1s;
+    }
+
+    .lang-tag {
+      display: inline-block;
+      font-size: .67rem;
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      padding: .1rem .35rem;
+      color: var(--accent);
+      text-align: center;
+    }
+
+    .loc-tag {
+      display: inline-block;
+      font-size: .67rem;
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--amber-bg);
+      border: 1px solid var(--amber);
+      border-radius: 4px;
+      padding: .1rem .35rem;
+      color: var(--amber);
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 72px;
+    }
+
+    .loc-tag.loc-none {
+      background: var(--surface3);
+      border-color: var(--border2);
+      color: var(--text-dim);
+    }
+
+    .feed-item:last-child { border-bottom: none; }
+    .feed-item:hover { background: var(--surface2); }
+    .feed-item.feed-new { animation: feedSlideIn .35s ease; }
+
+    @keyframes feedSlideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .feed-time {
+      font-size: .72rem;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+
+    .platform-tag {
+      display: inline-block;
+      font-size: .67rem;
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      padding: .1rem .4rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 84px;
+    }
+
+    .feed-snippet {
+      font-size: .78rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .feed-empty {
+      padding: 2.5rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: .85rem;
+    }
+
+    .feed-empty-icon { font-size: 2rem; margin-bottom: .5rem; }
+
+    .feed-last-updated {
+      font-size: .68rem;
+      color: var(--text-dim);
+      padding: .4rem 1.25rem;
+      border-top: 1px solid var(--border);
+      text-align: right;
+    }
+
     /* ─── Misc ───────────────────────────────────────────────────────────── */
     .divider {
       height: 1px;
@@ -725,34 +861,25 @@
       </div>
     </div>
 
-    <!-- Recent Classifications -->
+    <!-- Live Pipeline Feed -->
     <div class="card">
       <div class="card-header">
-        <span class="card-icon">&#128203;</span>
-        <h2>Recent Classifications</h2>
-        <span style="margin-left:auto;font-size:.75rem;color:var(--text-dim);">last 10 — in-memory only</span>
+        <span class="card-icon">&#128225;</span>
+        <h2>Live Pipeline Feed</h2>
+        <div class="feed-controls">
+          <span class="feed-counter" id="feedCounter">0 classified</span>
+          <button class="pause-btn" id="pauseBtn" title="Pause / Resume auto-refresh">&#9646;&#9646; Pause</button>
+          <button class="refresh-btn" id="refreshFeed">&#8635; Refresh</button>
+        </div>
       </div>
-      <div class="table-wrap">
-        <table id="historyTable">
-          <thead>
-            <tr>
-              <th>Content</th>
-              <th>Label</th>
-              <th>Confidence</th>
-              <th>Platform</th>
-              <th>Language</th>
-              <th>Time (ms)</th>
-            </tr>
-          </thead>
-          <tbody id="historyBody">
-            <tr>
-              <td colspan="6" style="text-align:center;color:var(--text-dim);padding:1.5rem;">
-                No classifications yet.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="feed-list" id="feedList">
+        <div class="feed-empty">
+          <div class="feed-empty-icon">&#128225;</div>
+          <div>Waiting for pipeline posts&hellip;</div>
+          <div style="margin-top:.4rem;font-size:.75rem;color:var(--text-dim);">Posts from Bluesky, YouTube, and SociaVault connectors appear here automatically.</div>
+        </div>
       </div>
+      <div class="feed-last-updated" id="feedLastUpdated">Not yet loaded</div>
     </div>
 
   </main>
@@ -765,7 +892,7 @@
 'use strict';
 
 /* ── Constants ─────────────────────────────────────────────── */
-const DEFAULT_BASE = 'https://ahfidailabs-immuniwatch-ml-service.hf.space';
+const DEFAULT_BASE = 'http://localhost:8001';
 const LS_BASE_KEY  = 'iw_api_base';
 const LS_KEY_KEY   = 'iw_api_key';
 const HEALTH_INTERVAL_MS = 30_000;
@@ -775,7 +902,6 @@ const WAKE_RETRY_SEC     = 5;
 let wakeRetryTimer   = null;
 let wakeCountdownInt = null;
 let healthIntervalId = null;
-const history = [];   // last 10 results
 
 /* ── DOM Shortcuts ─────────────────────────────────────────── */
 const $ = id => document.getElementById(id);
@@ -802,7 +928,6 @@ const el = {
   resultVersion:   $('resultVersion'),
   refreshMetrics:  $('refreshMetrics'),
   metricsBody:     $('metricsBody'),
-  historyBody:     $('historyBody'),
 };
 
 /* ── Storage helpers ───────────────────────────────────────── */
@@ -1161,40 +1286,91 @@ function fmt3(v) {
 
 el.refreshMetrics.addEventListener('click', loadMetrics);
 
-/* ── History ────────────────────────────────────────────────── */
-function addHistory(result, rawContent, platform) {
-  history.unshift({
-    content:    rawContent,
-    label:      result.label,
-    confidence: result.confidence,
-    platform:   platform,
-    language:   result.language || 'auto',
-    ms:         result.processing_ms,
-  });
-  if (history.length > 10) history.pop();
-  renderHistory();
+/* ── Live Feed ──────────────────────────────────────────────── */
+const FEED_INTERVAL_MS = 5_000;
+let feedIntervalId  = null;
+let feedPaused      = false;
+let feedSeenIds     = new Set();   // deduplicate across polls
+
+const feedEl = {
+  list:        $('feedList'),
+  counter:     $('feedCounter'),
+  lastUpdated: $('feedLastUpdated'),
+  pauseBtn:    $('pauseBtn'),
+  refreshBtn:  $('refreshFeed'),
+};
+
+feedEl.pauseBtn.addEventListener('click', () => {
+  feedPaused = !feedPaused;
+  feedEl.pauseBtn.classList.toggle('paused', feedPaused);
+  feedEl.pauseBtn.innerHTML = feedPaused
+    ? '&#9654; Resume'
+    : '&#9646;&#9646; Pause';
+});
+
+feedEl.refreshBtn.addEventListener('click', fetchFeed);
+
+async function fetchFeed() {
+  if (feedPaused) return;
+  try {
+    const res = await apiFetch('/recent?limit=100');
+    if (!res.ok) return;                         // silently skip — auth may not be set yet
+    const data = await res.json();
+    renderFeed(data);
+  } catch (_) {
+    /* network error — silently wait for next poll */
+  }
 }
 
-function renderHistory() {
-  if (!history.length) {
-    el.historyBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:1.5rem;">No classifications yet.</td></tr>`;
-    return;
-  }
+function renderFeed(data) {
+  const posts = data.posts || [];
+  const total = data.total_since_start || 0;
 
-  el.historyBody.innerHTML = history.map(h => {
-    const trunc   = h.content.length > 60 ? h.content.slice(0, 60) + '…' : h.content;
-    const bc      = badgeClass(h.label);
-    const confPct = (h.confidence * 100).toFixed(1) + '%';
+  feedEl.counter.textContent = total.toLocaleString() + ' classified';
+  feedEl.lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+
+  if (!posts.length) return;   // keep existing content if nothing new yet
+
+  // Find new posts (not seen before) and mark them
+  const newIds = new Set(posts.map(p => p.post_id));
+  const hasNew = posts.some(p => !feedSeenIds.has(p.post_id));
+  feedSeenIds = newIds;
+
+  if (!hasNew && feedEl.list.querySelector('.feed-item')) return;  // nothing changed
+
+  feedEl.list.innerHTML = posts.map((p, i) => {
+    const bc       = badgeClass(p.label);
+    const confPct  = ((p.confidence || 0) * 100).toFixed(0) + '%';
+    const snippet  = (p.content_snippet || '').slice(0, 90) || '(no content)';
+    const timeStr  = p.classified_at
+      ? new Date(p.classified_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'})
+      : '—';
+    const isNew    = i < 3 && hasNew ? ' feed-new' : '';
+    const langCode = p.language || '—';
+    const stateVal = p.state || null;
+    const locClass = stateVal ? 'loc-tag' : 'loc-tag loc-none';
+    const locLabel = stateVal || '—';
     return `
-      <tr>
-        <td class="truncated" title="${escHtml(h.content)}">${escHtml(trunc)}</td>
-        <td><span class="label-badge ${bc}" style="font-size:.72rem;padding:.2rem .6rem;">${escHtml(h.label || '—')}</span></td>
-        <td class="td-mono">${confPct}</td>
-        <td class="td-mono">${escHtml(h.platform)}</td>
-        <td class="td-mono">${escHtml(h.language)}</td>
-        <td class="td-mono">${h.ms ?? '—'}</td>
-      </tr>`;
+      <div class="feed-item${isNew}" title="${escHtml(p.content_snippet || '')}">
+        <span class="feed-time">${escHtml(timeStr)}</span>
+        <span class="platform-tag" title="${escHtml(p.platform || '')}">${escHtml(p.platform || '—')}</span>
+        <span class="label-badge ${bc}" style="font-size:.67rem;padding:.15rem .5rem;">${escHtml(p.label || '—')} ${confPct}</span>
+        <span class="lang-tag" title="Detected language">${escHtml(langCode)}</span>
+        <span class="${locClass}" title="Nigerian state">${escHtml(locLabel)}</span>
+        <span class="feed-snippet">${escHtml(snippet)}</span>
+      </div>`;
   }).join('');
+}
+
+function startFeedPolling() {
+  clearInterval(feedIntervalId);
+  fetchFeed();
+  feedIntervalId = setInterval(fetchFeed, FEED_INTERVAL_MS);
+}
+
+/* Keep classify form wiring — manual submits also appear in feed on next poll */
+function addHistory(result, rawContent, platform) {
+  /* intentionally no-op — manual results appear via the /recent feed */
 }
 
 /* ── Utility ────────────────────────────────────────────────── */
@@ -1211,6 +1387,7 @@ function escHtml(str) {
   loadSettings();
   startHealthPolling();
   loadMetrics();
+  startFeedPolling();
 })();
 </script>
 </body>
