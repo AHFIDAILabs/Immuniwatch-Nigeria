@@ -48,7 +48,6 @@ _rag = None
 # RAG initialisation — Section 5.3
 # ---------------------------------------------------------------------------
 def _init_rag() -> None:
-    """Initialise RAG retriever once at startup. Graceful if KB not ready."""
     global _rag
     try:
         from src.intelligence.rag import RAGRetriever
@@ -95,11 +94,6 @@ def _make_consumer() -> KafkaConsumer:
 # Call FastAPI /classify endpoint
 # ---------------------------------------------------------------------------
 def _classify(post: dict) -> dict:
-    """
-    Send post to FastAPI /classify and return the result.
-    Retries up to MAX_RETRIES times on failure.
-    Returns None if all retries fail.
-    """
     payload = {
         "post_id":     post.get("post_id", ""),
         "content":     post.get("content", ""),
@@ -139,7 +133,6 @@ def _classify(post: dict) -> dict:
 # Publish to Kafka topic
 # ---------------------------------------------------------------------------
 def _publish(producer: KafkaProducer, topic: str, message: dict) -> None:
-    """Publish a message to a Kafka topic with schema_version."""
     message["schema_version"] = "1.0"
     message["published_at"]   = datetime.now(timezone.utc).isoformat()
 
@@ -207,14 +200,6 @@ def _build_counter_response(post_id: str, content: str,
 # Process one post — Section 2.2 pipeline
 # ---------------------------------------------------------------------------
 def _process(post: dict, producer: KafkaProducer) -> None:
-    """
-    Full pipeline for one post:
-      1. Classify (FastAPI)
-      2. RAG cross-reference → evidence records   (HITL posts only)
-      3. Counter-response generation               (misinformation + evidence only)
-      4. Publish to iw.classified-posts
-      5. Route to iw.hitl-queue if needed
-    """
     post_id = post.get("post_id", "unknown")
     content = post.get("content", "")
 
@@ -284,7 +269,6 @@ def _process(post: dict, producer: KafkaProducer) -> None:
 # Main loop
 # ---------------------------------------------------------------------------
 def run() -> None:
-    """Start the classification worker. Runs until interrupted."""
     log.info("=" * 55)
     log.info("ImmuniWatch — Classification Worker")
     log.info("Broker:    %s", KAFKA_BROKERS)

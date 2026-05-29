@@ -80,10 +80,6 @@ _config = None       # model_config.json
 def load(onnx_path: str, thresholds_path: str,
          config_path: str, tokenizer_repo: str,
          hf_token: Optional[str] = None) -> None:
-    """
-    Load all inference artefacts.
-    Called once at FastAPI startup — not on every request.
-    """
     global _session, _tokenizer, _thresholds, _config
 
     import onnxruntime as ort
@@ -115,20 +111,6 @@ def is_loaded() -> bool:
 
 def classify(text: str, language: Optional[str] = None,
              location: Optional[str] = None) -> dict:
-    """
-    Classify a single post text.
-
-    Args:
-        text:     The post content to classify.
-        language: Language code if known from connector.
-                  If None, detected automatically.
-        location: State/region if known from connector.
-                  If None, extracted from text.
-
-    Returns dict with:
-        label, confidence, entropy, alternatives,
-        language, state, processing_ms
-    """
     if not is_loaded():
         raise RuntimeError("Classifier not loaded. Call load() at startup.")
 
@@ -195,15 +177,6 @@ def classify(text: str, language: Optional[str] = None,
 # Language resolution
 # ---------------------------------------------------------------------------
 def _resolve_language(text: str, provided: Optional[str]) -> Optional[str]:
-    """
-    Return normalised language code.
-
-    Priority:
-    1. Trust connector-provided code only for non-English Nigerian languages
-       (connector-provided 'en' is unreliable — connectors hardcode it).
-    2. Score text against Nigerian language lexicons.
-    3. Fall back to langdetect for English vs. other.
-    """
     if provided:
         normed = LANG_NORMALISE.get(provided.lower(), provided.lower())
         # If connector explicitly signals a Nigerian language, trust it
@@ -235,14 +208,6 @@ def _resolve_language(text: str, provided: Optional[str]) -> Optional[str]:
 # State extraction
 # ---------------------------------------------------------------------------
 def _resolve_state(text: str, provided: Optional[str]) -> Optional[str]:
-    """
-    Return Nigerian state name.
-
-    Priority:
-    1. Pattern match on connector-provided location string (user profile / metadata).
-       This may be a raw bio or partial address — run the regex, don't trust verbatim.
-    2. Pattern match on post text (fallback).
-    """
     if provided:
         match = _STATE_PATTERN.search(provided)
         if match:

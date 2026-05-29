@@ -31,10 +31,6 @@ SEARCH_QUERIES = [
 
 
 class YouTubeConnector(BaseConnector):
-    """
-    Polls YouTube Data API v3 for vaccine-related video comments.
-    Publishes new comments to Kafka via the on_post callback.
-    """
 
     def __init__(self, on_post: Callable[[RawPost], None]):
         super().__init__(on_post)
@@ -87,7 +83,6 @@ class YouTubeConnector(BaseConnector):
                         self._safe_on_post(post)
 
     def _search_videos(self, query: str) -> List[str]:
-        """Search YouTube for recent videos. Returns list of video IDs."""
         try:
             resp = requests.get(
                 f"{YOUTUBE_API_BASE}/search",
@@ -112,7 +107,6 @@ class YouTubeConnector(BaseConnector):
             return []
 
     def _get_comments(self, video_id: str) -> list:
-        """Fetch top-level comments for a video."""
         try:
             resp = requests.get(
                 f"{YOUTUBE_API_BASE}/commentThreads",
@@ -154,7 +148,6 @@ class YouTubeConnector(BaseConnector):
             return []
 
     def _to_raw_post(self, item: dict, video_id: str) -> Optional[RawPost]:
-        """Convert YouTube comment item to RawPost."""
         try:
             snippet    = item["snippet"]["topLevelComment"]["snippet"]
             comment_id = item["id"]

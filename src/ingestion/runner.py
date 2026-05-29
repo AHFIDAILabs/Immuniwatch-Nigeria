@@ -39,7 +39,6 @@ def _make_producer() -> KafkaProducer:
 
 
 def _publish_to_kafka(producer: KafkaProducer, post) -> None:
-    """Publish a RawPost to iw.raw-posts topic."""
     try:
         message = post.to_kafka_message()
         producer.send(TOPIC_RAW, value=message)
@@ -56,7 +55,6 @@ def _publish_to_kafka(producer: KafkaProducer, post) -> None:
 # Main
 # ---------------------------------------------------------------------------
 def run() -> None:
-    """Start all connectors. Runs until Ctrl+C."""
     log.info("=" * 55)
     log.info("ImmuniWatch — Ingestion Runner")
     log.info("Kafka broker: %s", KAFKA_BROKERS)

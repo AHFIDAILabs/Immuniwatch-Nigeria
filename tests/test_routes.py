@@ -1,10 +1,3 @@
-"""
-Tests for src/api/routes.py and src/api/main.py
-
-Tests FastAPI endpoints using TestClient.
-Mocks classifier so ONNX model is not required.
-"""
-
 import os
 import pytest
 from unittest.mock import patch
@@ -34,7 +27,6 @@ TEST_API_KEY = "test-key-for-unit-tests"
 
 @pytest.fixture
 def client():
-    """TestClient with classifier and embedder mocked — no model downloads in CI."""
     with patch("src.models.classifier.is_loaded", return_value=True), \
          patch("src.models.classifier.classify", return_value=MOCK_CLASSIFY_RESULT), \
          patch("src.models.classifier.load", return_value=None), \
@@ -60,7 +52,6 @@ def test_health_returns_200(client):
 
 
 def test_health_no_auth_required(client):
-    """Health endpoint must work without API key."""
     resp = client.get("/health")
     assert resp.status_code == 200
 
@@ -169,7 +160,6 @@ def test_classify_missing_platform_returns_422(client):
 # ---------------------------------------------------------------------------
 
 def test_embed_returns_503_when_model_not_loaded(client):
-    """Embedder not preloaded in test fixture — must return 503."""
     resp = client.post("/embed", json={
         "text": "vaccine causes infertility"
     }, headers=AUTH)

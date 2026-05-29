@@ -12,17 +12,14 @@ from src.intelligence.rag import (
 # ---------------------------------------------------------------------------
 
 def test_top_k_matches_system_design():
-    """System design Section 5.3 specifies top-5."""
     assert TOP_K == 5
 
 
 def test_similarity_threshold_matches_system_design():
-    """System design Section 5.2 specifies 0.72."""
     assert SIMILARITY_THRESHOLD == 0.72
 
 
 def test_embedding_model_is_multilingual_e5():
-    """ML spec float[768] is authoritative — e5-base, not e5-large."""
     assert EMBEDDING_MODEL == "intfloat/multilingual-e5-base"
 
 
@@ -95,19 +92,16 @@ def test_evidence_record_default_language_is_en():
 # ---------------------------------------------------------------------------
 
 def test_rag_retriever_instantiates():
-    """RAGRetriever should instantiate even if KB not populated."""
     retriever = RAGRetriever()
     assert retriever is not None
 
 
 def test_rag_retriever_is_ready_reflects_kb_state():
-    """is_ready() should return bool — True or False depending on KB."""
     retriever = RAGRetriever()
     assert isinstance(retriever.is_ready(), bool)
 
 
 def test_rag_retriever_returns_empty_list_for_empty_text():
-    """Empty text should return empty evidence."""
     retriever = RAGRetriever()
     result = retriever.retrieve("")
     assert result == []

@@ -132,7 +132,6 @@ SOURCES = [
 # Text extraction
 # ---------------------------------------------------------------------------
 def _fetch_text(url: str) -> Optional[str]:
-    """Fetch and extract clean text from a URL."""
     try:
         resp = requests.get(
             url,
@@ -160,7 +159,6 @@ def _fetch_text(url: str) -> Optional[str]:
 # ---------------------------------------------------------------------------
 def _chunk_text(text: str, source_name: str,
                 source_url: str, language: str) -> List[dict]:
-    """Split text into overlapping chunks."""
     words  = text.split()
     chunks = []
     step   = CHUNK_WORDS - CHUNK_OVERLAP
@@ -186,7 +184,6 @@ def _chunk_text(text: str, source_name: str,
 # ChromaDB setup
 # ---------------------------------------------------------------------------
 def _get_collection():
-    """Get or create ChromaDB collection with multilingual-e5-large."""
     import chromadb
     from chromadb.utils import embedding_functions
 
@@ -206,7 +203,6 @@ def _get_collection():
 # Main ingestion
 # ---------------------------------------------------------------------------
 def ingest_all() -> None:
-    """Crawl all sources and store chunks in ChromaDB."""
     log.info("=" * 55)
     log.info("ImmuniWatch — Knowledge Base Ingestion")
     log.info("Sources:         %d", len(SOURCES))

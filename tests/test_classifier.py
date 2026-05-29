@@ -13,7 +13,6 @@ from src.models.classifier import (
 # ---------------------------------------------------------------------------
 
 def test_is_loaded_returns_false_before_load():
-    """Model should not be loaded in test environment."""
     assert is_loaded() is False
 
 
@@ -22,7 +21,6 @@ def test_is_loaded_returns_false_before_load():
 # ---------------------------------------------------------------------------
 
 def test_labels_order():
-    """Label order must match training — confirmed from model card."""
     assert LABELS == ["factual", "misinformation", "irrelevant"]
 
 
@@ -42,7 +40,6 @@ def test_all_labels_have_ids():
 # ---------------------------------------------------------------------------
 
 def test_resolve_state_uses_provided_location():
-    """Connector-provided location takes priority over text extraction."""
     result = _resolve_state("Some text", provided="Kano")
     assert result == "Kano"
 
@@ -68,7 +65,6 @@ def test_resolve_state_case_insensitive():
 
 
 def test_resolve_state_all_36_states_detectable():
-    """Each state name should be detectable from text."""
     states_to_check = [
         "Lagos", "Kano", "Rivers", "Oyo", "Kaduna",
         "Borno", "Sokoto", "Enugu", "Imo", "Delta"
@@ -84,7 +80,6 @@ def test_resolve_state_all_36_states_detectable():
 # ---------------------------------------------------------------------------
 
 def test_resolve_language_uses_provided_code():
-    """Connector-provided language takes priority."""
     result = _resolve_language("any text", provided="ha")
     assert result == "ha"
 
@@ -123,7 +118,6 @@ def test_resolve_language_detects_english_from_text():
 
 
 def test_resolve_language_returns_none_for_unknown_language():
-    """When no language provided and text is not English, returns None."""
     result = _resolve_language("", provided=None)
     assert result is None or isinstance(result, str)
 
@@ -142,5 +136,4 @@ def test_nigerian_states_contains_major_states():
 
 
 def test_nigerian_states_count():
-    """Nigeria has 36 states + FCT + Abuja alias = 38 entries."""
     assert len(NIGERIAN_STATES) == 38

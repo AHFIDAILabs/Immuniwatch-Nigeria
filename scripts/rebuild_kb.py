@@ -1,13 +1,3 @@
-"""
-One-shot script: rebuild knowledge base with multilingual-e5-base (768-dim).
-
-Reads all 56 documents from the existing 1024-dim collection,
-deletes it, and recreates it with the correct 768-dim model.
-No web scraping — preserves all existing content.
-
-Usage:
-    python scripts/rebuild_kb.py
-"""
 import logging
 import sys
 from pathlib import Path

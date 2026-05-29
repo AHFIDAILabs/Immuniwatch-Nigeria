@@ -14,12 +14,10 @@ from src.ingestion.deduplication import (
 # ---------------------------------------------------------------------------
 
 def test_jaccard_threshold_matches_system_design():
-    """System design Section 4.3 specifies 0.85."""
     assert JACCARD_THRESHOLD == 0.85
 
 
 def test_exact_ttl_is_24_hours():
-    """System design Section 4.3 specifies 24-hour TTL."""
     assert EXACT_TTL_S == 86400
 
 
@@ -98,27 +96,23 @@ def test_unique_posts_pass_through():
 
 
 def test_empty_text_is_duplicate():
-    """Empty posts should be discarded."""
     dedup = Deduplicator()
     assert dedup.is_duplicate("post-001", "") is True
     assert dedup.is_duplicate("post-002", "   ") is True
 
 
 def test_very_short_text_is_duplicate():
-    """Posts shorter than 5 characters should be discarded."""
     dedup = Deduplicator()
     assert dedup.is_duplicate("post-001", "ok") is True
 
 
 def test_same_text_different_case_is_duplicate():
-    """Case differences should not bypass deduplication."""
     dedup = Deduplicator()
     assert dedup.is_duplicate("post-001", "Vaccine kills children") is False
     assert dedup.is_duplicate("post-002", "VACCINE KILLS CHILDREN") is True
 
 
 def test_same_text_different_urls_is_duplicate():
-    """URLs are stripped before hashing."""
     dedup = Deduplicator()
     text1 = "Vaccine kills children https://link1.com"
     text2 = "Vaccine kills children https://link2.com"

@@ -38,13 +38,6 @@ VACCINE_KEYWORDS = [
 
 
 class SociaVaultConnector(BaseConnector):
-    """
-    Polls SociaVault API for vaccine-related posts across
-    Twitter, Facebook, Instagram, TikTok, and Reddit.
-
-    Platform shown on dashboard is always the original source
-    platform — not SociaVault.
-    """
 
     def __init__(self, on_post: Callable[[RawPost], None]):
         super().__init__(on_post)
@@ -88,7 +81,6 @@ class SociaVaultConnector(BaseConnector):
             time.sleep(self.poll_interval)
 
     def _poll_once(self) -> None:
-        """Fetch latest mentions and publish new ones to Kafka."""
         for keyword in VACCINE_KEYWORDS:
             posts = self._fetch_posts(keyword)
             for raw in posts:
@@ -99,10 +91,6 @@ class SociaVaultConnector(BaseConnector):
                     self._safe_on_post(post)
 
     def _fetch_posts(self, keyword: str) -> list:
-        """
-        Fetch posts from SociaVault for a keyword.
-        Returns empty list on any error — connector keeps running.
-        """
         params = {
             "q":     keyword,
             "limit": 20,
@@ -144,11 +132,6 @@ class SociaVaultConnector(BaseConnector):
             return []
 
     def _to_raw_post(self, item: dict) -> Optional[RawPost]:
-        """
-        Convert SociaVault post dict to RawPost.
-        Platform is taken from SociaVault source field so
-        dashboard shows original platform (Twitter/Facebook etc).
-        """
         try:
             content = (
                 item.get("text") or

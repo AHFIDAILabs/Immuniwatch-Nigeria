@@ -1,19 +1,3 @@
-"""
-ImmuniWatch Nigeria — Lightweight Evaluation
-==============================================
-Evaluates system components without loading heavy ML models.
-Safe to run on CPU-only machines with limited RAM.
-
-Checks:
-  1. Knowledge base exists and has chunks
-  2. Counter-response format compliance (no API calls)
-  3. Classifier constants match system design
-  4. All required files exist
-
-Usage:
-    python -m src.intelligence.evaluation
-"""
-
 import logging
 import sys
 from pathlib import Path
@@ -35,7 +19,6 @@ log = logging.getLogger(__name__)
 # Check 1 — Knowledge base exists and has chunks
 # ---------------------------------------------------------------------------
 def check_knowledge_base() -> bool:
-    """Verify ChromaDB knowledge base is populated."""
     kb_path = Path("models/knowledge_base")
     if not kb_path.exists():
         log.error("  [FAIL] Knowledge base not found at %s", kb_path)
@@ -63,7 +46,6 @@ def check_knowledge_base() -> bool:
 # Check 2 — ONNX model file exists and is valid size
 # ---------------------------------------------------------------------------
 def check_onnx_model() -> bool:
-    """Verify ONNX model file exists."""
     onnx_path = Path("models/onnx/immuniwatch_classifier.onnx")
     if not onnx_path.exists():
         log.error("  [FAIL] ONNX model not found: %s", onnx_path)
@@ -78,7 +60,6 @@ def check_onnx_model() -> bool:
 # Check 3 — Thresholds file correct
 # ---------------------------------------------------------------------------
 def check_thresholds() -> bool:
-    """Verify thresholds.json has correct structure."""
     import json
     path = Path("models/onnx/thresholds.json")
     if not path.exists():
@@ -104,7 +85,6 @@ def check_thresholds() -> bool:
 # Check 4 — System design constants
 # ---------------------------------------------------------------------------
 def check_system_design_constants() -> bool:
-    """Verify all system design constants are correct."""
     passed = True
 
     from src.ingestion.deduplication import JACCARD_THRESHOLD, EXACT_TTL_S
@@ -159,10 +139,6 @@ def check_system_design_constants() -> bool:
 # Check 5 — Counter-response format compliance (no API calls)
 # ---------------------------------------------------------------------------
 def check_counter_format_compliance() -> bool:
-    """
-    Verify length enforcement works correctly.
-    Uses only pure functions — no LLM calls, no tokens consumed.
-    """
     from src.intelligence.counter import (
         _enforce_short, _enforce_word_limit,
         SHORT_MAX_CHARS, MEDIUM_MAX_WORDS, LONG_MAX_WORDS,
@@ -202,7 +178,6 @@ def check_counter_format_compliance() -> bool:
 # Check 6 — Required files exist
 # ---------------------------------------------------------------------------
 def check_required_files() -> bool:
-    """Verify all required production files exist."""
     required = [
         "models/onnx/immuniwatch_classifier.onnx",
         "models/onnx/thresholds.json",

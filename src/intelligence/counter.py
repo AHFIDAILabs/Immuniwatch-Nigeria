@@ -1,23 +1,3 @@
-"""
-ImmuniWatch Nigeria — Counter-Response Generation
-===================================================
-Generates fact-based counter-responses to vaccine misinformation.
-Uses Groq (development) or Anthropic Claude (production).
-
-System Design reference: Section 6.5 — Counter-Response Generation
-  "Three formats: SHORT ≤280 chars, MEDIUM ≤200 words, LONG ≤500 words"
-  "Response must be in same language as original post"
-  "Grounded in RAG evidence — no fabrication"
-
-Configuration (.env):
-    COUNTER_RESPONSE_PROVIDER   groq (default) or anthropic
-    GROQ_API_KEY                From console.groq.com (free)
-    GROQ_MODEL                  llama-3.3-70b-versatile
-    ANTHROPIC_API_KEY           From console.anthropic.com (paid)
-
-Switch provider:
-    Change COUNTER_RESPONSE_PROVIDER in .env — no code changes.
-"""
 
 import logging
 import os
@@ -58,10 +38,6 @@ LANGUAGE_NAMES = {
 # ---------------------------------------------------------------------------
 @dataclass
 class CounterResponse:
-    """
-    Generated counter-response in three formats.
-    All formats are grounded in RAG evidence.
-    """
     post_id:        str
     original_claim: str
     language:       str
@@ -93,10 +69,6 @@ def _build_prompt(
     evidence_snippets: List[str],
     format_type: str,
 ) -> str:
-    """
-    Build a prompt for counter-response generation.
-    Evidence is embedded so response is grounded — not fabricated.
-    """
     lang_name = LANGUAGE_NAMES.get(language, "English")
 
     if format_type == "short":
@@ -132,7 +104,6 @@ Write only the counter-response text. No preamble, no labels."""
 # LLM call — Groq
 # ---------------------------------------------------------------------------
 def _call_groq(prompt: str) -> str:
-    """Call Groq API and return generated text."""
     from groq import Groq
     client = Groq(api_key=GROQ_API_KEY)
     response = client.chat.completions.create(
@@ -148,7 +119,6 @@ def _call_groq(prompt: str) -> str:
 # LLM call — Anthropic
 # ---------------------------------------------------------------------------
 def _call_anthropic(prompt: str) -> str:
-    """Call Anthropic Claude API and return generated text."""
     import anthropic
     client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
     response = client.messages.create(
@@ -163,7 +133,6 @@ def _call_anthropic(prompt: str) -> str:
 # LLM dispatcher
 # ---------------------------------------------------------------------------
 def _generate(prompt: str) -> str:
-    """Route to correct LLM provider based on .env config."""
     if PROVIDER == "anthropic":
         if not ANTHROPIC_KEY:
             raise ValueError("ANTHROPIC_API_KEY not set in .env")
@@ -178,7 +147,6 @@ def _generate(prompt: str) -> str:
 # Length enforcement
 # ---------------------------------------------------------------------------
 def _enforce_short(text: str) -> str:
-    """Truncate to 280 characters at word boundary including ellipsis."""
     if len(text) <= SHORT_MAX_CHARS:
         return text
     # Reserve 3 chars for "..." so final result stays within 280
@@ -188,7 +156,6 @@ def _enforce_short(text: str) -> str:
 
 
 def _enforce_word_limit(text: str, max_words: int) -> str:
-    """Truncate to word limit."""
     words = text.split()
     if len(words) <= max_words:
         return text
@@ -205,21 +172,6 @@ def generate_counter_response(
     evidence_snippets: List[str],
     source_urls:       List[str],
 ) -> Optional[CounterResponse]:
-    """
-    Generate counter-response in all three formats.
-
-    Args:
-        post_id:           Unique ID of the misinformation post.
-        claim:             The misinformation text.
-        language:          Language code (en/pcm/ha/yo/ig).
-                           Defaults to English if None.
-        evidence_snippets: List of verified text chunks from RAG.
-        source_urls:       List of source URLs for attribution.
-
-    Returns:
-        CounterResponse with short/medium/long formats.
-        Returns None if generation fails.
-    """
     if not claim or len(claim.strip()) < 5:
         log.warning("Claim too short to generate counter-response")
         return None

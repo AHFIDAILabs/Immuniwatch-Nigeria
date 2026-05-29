@@ -1,20 +1,3 @@
-"""
-ImmuniWatch Nigeria — FastAPI Application Entry Point
-======================================================
-Server setup, startup lifecycle, and authentication.
-All endpoint logic lives in routes.py.
-All request/response models live in schemas.py.
-
-Usage:
-    uvicorn src.api.main:app --host 0.0.0.0 --port 8000
-
-Environment variables (set in .env):
-    PORT          Server port (default: 8000)
-    API_KEY       Shared secret with full stack developer (min 32 chars)
-    MODEL_VERSION Current model version string e.g. v1.0.0
-    HF_TOKEN      HuggingFace token for tokenizer download
-"""
-
 import collections
 import logging
 import os
@@ -102,7 +85,6 @@ def _download_model_files() -> None:
 # ---------------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load all models once at startup. Unload cleanly on shutdown."""
     from src.models.classifier import load as load_classifier
     from src.intelligence.rag import preload_embedder
 
@@ -149,7 +131,6 @@ app.add_middleware(
 # Never log the key value — only log presence or absence
 # ---------------------------------------------------------------------------
 def _check_rate_limit(key: str) -> tuple:
-    """Sliding-window rate limiter. Returns (allowed, retry_after_seconds)."""
     now = time.time()
     with _rate_lock:
         if key not in _rate_buckets:
@@ -204,7 +185,6 @@ async def root():
 # ---------------------------------------------------------------------------
 @app.get("/dashboard", include_in_schema=False)
 async def dashboard():
-    """Serve the monitoring dashboard HTML page."""
     path = Path("dashboard.html")
     if not path.exists():
         raise HTTPException(status_code=404, detail="Dashboard not found")
@@ -216,7 +196,6 @@ async def dashboard():
 # ---------------------------------------------------------------------------
 @app.get("/health")
 async def health():
-    """Health check — no auth. Does NOT run inference."""
     from src.models.classifier import is_loaded
 
     if not is_loaded():

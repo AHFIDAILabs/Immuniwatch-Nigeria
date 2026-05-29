@@ -31,10 +31,6 @@ SEARCH_TERMS = [
 
 
 class BlueskyConnector(BaseConnector):
-    """
-    Polls Bluesky for vaccine-related posts using the
-    AT Protocol public API. Completely free and unlimited.
-    """
 
     def __init__(self, on_post: Callable[[RawPost], None]):
         super().__init__(on_post)
@@ -84,10 +80,6 @@ class BlueskyConnector(BaseConnector):
     # ── Internal ─────────────────────────────────────────────────
 
     def _authenticate(self) -> bool:
-        """
-        Authenticate with Bluesky and store access token.
-        Returns True on success, False on failure.
-        """
         try:
             resp = requests.post(
                 f"{BSKY_API_BASE}/com.atproto.server.createSession",
@@ -114,7 +106,6 @@ class BlueskyConnector(BaseConnector):
             time.sleep(self.poll_interval)
 
     def _poll_once(self) -> None:
-        """Search all vaccine terms and publish new posts."""
         for term in SEARCH_TERMS:
             posts = self._search_posts(term)
             for item in posts:
@@ -125,7 +116,6 @@ class BlueskyConnector(BaseConnector):
                     self._safe_on_post(post)
 
     def _search_posts(self, term: str) -> List[dict]:
-        """Search Bluesky posts for a term."""
         if not self._access_token:
             return []
 
@@ -160,13 +150,6 @@ class BlueskyConnector(BaseConnector):
             return []
 
     def _get_author_location(self, author_did: str) -> Optional[str]:
-        """
-        Fetch raw location string from the author's Bluesky profile.
-        Checks the dedicated `location` field first, then falls back to `description`.
-        Results are cached per DID — each unique author is fetched at most once
-        per connector lifetime.
-        Returns None if unavailable or on any error.
-        """
         if author_did in self._profile_location_cache:
             return self._profile_location_cache[author_did]
 
@@ -195,7 +178,6 @@ class BlueskyConnector(BaseConnector):
         return location
 
     def _to_raw_post(self, item: dict) -> Optional[RawPost]:
-        """Convert Bluesky post item to RawPost."""
         try:
             record  = item.get("record", {})
             content = record.get("text", "").strip()

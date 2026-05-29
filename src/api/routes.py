@@ -1,8 +1,3 @@
-"""
-ImmuniWatch Nigeria — API Routes
-==================================
-"""
-
 import collections
 import json
 import logging
@@ -64,7 +59,6 @@ def _model_version() -> str:
 
 
 def _classify_one(req: ClassifyRequest) -> ClassifyResponse:
-    """Run inference on one post. Raises 503 if model not loaded."""
     from src.models.classifier import classify, is_loaded
 
     if not is_loaded():
@@ -125,10 +119,6 @@ def _classify_one(req: ClassifyRequest) -> ClassifyResponse:
 # ---------------------------------------------------------------------------
 
 def health_check() -> dict:
-    """
-    Returns server health status.
-    Does NOT run inference — just checks if model is loaded.
-    """
     import time
     from src.models.classifier import is_loaded
     from src.api.main import _start_time
@@ -188,7 +178,6 @@ async def classify_batch(req: BatchClassifyRequest):
 
 
 def _run_batch(job_id: str, posts: List[ClassifyRequest]) -> None:
-    """Background worker — classifies all posts in a batch."""
     results = []
     total   = len(posts)
 
@@ -291,7 +280,6 @@ async def embed_batch_endpoint(req: EmbedBatchRequest):
 
 @router.get("/recent")
 async def recent_classifications(limit: int = 50):
-    """Returns the last N classified posts, newest first. Resets on restart."""
     limit = max(1, min(limit, 100))
     with _feed_lock:
         feed = list(_recent_feed)[:limit]

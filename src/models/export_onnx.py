@@ -1,11 +1,3 @@
-"""
-ImmuniWatch Nigeria — ONNX Model Export
-========================================
-Loads the DAPT base + LoRA adapter from HuggingFace,
-merges the adapter into the base, exports to ONNX,
-verifies correctness, benchmarks latency, and saves
-the thresholds alongside the ONNX model.
-"""
 
 import json
 import logging
@@ -58,12 +50,6 @@ LATENCY_TARGET_MS = 80
 # Step 1 — Load base + LoRA adapter, then merge
 # ---------------------------------------------------------------------------
 def load_and_merge():
-    """
-    Load DAPT base model and apply LoRA adapter from HuggingFace.
-    Merge adapter weights into base before ONNX export.
-    ONNX does not understand PEFT wrappers — merging is required.
-    Returns (merged_model, tokenizer).
-    """
     from peft import PeftModel
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
@@ -98,7 +84,6 @@ def load_and_merge():
 # Step 2 — Export to ONNX
 # ---------------------------------------------------------------------------
 def export_onnx(model, tokenizer) -> float:
-    """Export merged model to ONNX. Returns file size in MB."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     log.info("Exporting to ONNX (opset 14)...")
@@ -137,10 +122,6 @@ def export_onnx(model, tokenizer) -> float:
 # Step 3 — Verify ONNX matches PyTorch
 # ---------------------------------------------------------------------------
 def verify(model, tokenizer) -> None:
-    """
-    Compare PyTorch and ONNX predictions on test sentences.
-    Raises RuntimeError if any prediction disagrees.
-    """
     import onnxruntime as ort
 
     log.info("Verifying ONNX predictions match PyTorch...")
@@ -201,10 +182,6 @@ def verify(model, tokenizer) -> None:
 # Step 4 — Benchmark latency
 # ---------------------------------------------------------------------------
 def benchmark(tokenizer) -> float:
-    """
-    Benchmark inference latency on CPU over 100 runs.
-    Returns average latency in milliseconds.
-    """
     import onnxruntime as ort
 
     log.info("Benchmarking latency (100 runs, CPU)...")
@@ -247,10 +224,6 @@ def benchmark(tokenizer) -> float:
 # Step 5 — Save thresholds and model config
 # ---------------------------------------------------------------------------
 def save_artifacts(size_mb: float, avg_ms: float, tokenizer) -> None:
-    """
-    Download thresholds.json from HuggingFace LoRA repo and save it
-    alongside the ONNX model. Write model_config.json for inference server.
-    """
     from huggingface_hub import hf_hub_download
 
     log.info("Downloading thresholds.json from %s...", LORA_REPO)

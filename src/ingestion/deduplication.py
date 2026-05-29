@@ -34,7 +34,6 @@ def _normalise(text: str) -> str:
 
 
 def _shingles(text: str) -> Set[str]:
-    """Character k-shingles for MinHash input."""
     return {text[i:i + SHINGLE_SIZE]
             for i in range(max(1, len(text) - SHINGLE_SIZE + 1))}
 
@@ -43,10 +42,6 @@ def _shingles(text: str) -> Set[str]:
 # Deduplicator
 # ---------------------------------------------------------------------------
 class Deduplicator:
-    """
-    Two-layer deduplication per system design Section 4.3.
-    Thread-safe — safe to call from multiple connector threads.
-    """
 
     def __init__(self):
         self._lock = Lock()
@@ -62,11 +57,6 @@ class Deduplicator:
     # ── Initialisation ───────────────────────────────────────────
 
     def _init_lsh(self) -> None:
-        """
-        Initialise MinHash LSH index.
-        If datasketch is not installed, Layer 2 is skipped and
-        only exact deduplication runs — no crash, just a warning.
-        """
         try:
             from datasketch import MinHashLSH
             self._lsh           = MinHashLSH(
@@ -87,17 +77,6 @@ class Deduplicator:
     # ── Public API ───────────────────────────────────────────────
 
     def is_duplicate(self, post_id: str, text: str) -> bool:
-        """
-        Check whether this post is a duplicate.
-
-        Args:
-            post_id: Unique post identifier from the platform.
-            text:    Raw post text content.
-
-        Returns:
-            True  — post is a duplicate, discard it.
-            False — post is new, safe to publish to Kafka.
-        """
         if not text or len(text.strip()) < 5:
             return True
 
@@ -126,11 +105,6 @@ class Deduplicator:
     # ── Internal helpers ─────────────────────────────────────────
 
     def _check_near_duplicate(self, post_id: str, normalised: str) -> bool:
-        """
-        Run MinHash LSH query.
-        Returns True if a near-duplicate exists.
-        Inserts the post into the LSH index if it is new.
-        """
         from datasketch import MinHash
 
         minhash = MinHash(num_perm=NUM_PERMUTATIONS)
@@ -151,11 +125,6 @@ class Deduplicator:
         return False
 
     def _cleanup_expired(self) -> None:
-        """
-        Remove exact hashes older than 24 hours.
-        Called on every is_duplicate() call inside the lock.
-        Keeps memory bounded over long running periods.
-        """
         cutoff = time.time() - EXACT_TTL_S
         expired = [h for h, ts in self._exact.items() if ts < cutoff]
         for h in expired:

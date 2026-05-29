@@ -160,7 +160,6 @@ def test_build_prompt_instructs_no_fabrication():
 
 
 def test_build_prompt_limits_evidence_to_3_snippets():
-    """Prompt should not include more than 3 evidence chunks."""
     snippets = [f"Evidence {i}" for i in range(10)]
     prompt = _build_prompt(
         claim="Vaccine causes harm",

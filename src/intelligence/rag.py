@@ -20,10 +20,6 @@ SIMILARITY_THRESHOLD = 0.72  # Section 5.2 — cosine threshold
 # Evidence record — Section 5.3.1
 # ---------------------------------------------------------------------------
 class EvidenceRecord:
-    """
-    Structured evidence record returned for a misinformation post.
-    Matches system design Section 5.3.1 EvidenceRecord schema.
-    """
 
     def __init__(
         self,
@@ -53,14 +49,6 @@ class EvidenceRecord:
 # RAG Retriever
 # ---------------------------------------------------------------------------
 class RAGRetriever:
-    """
-    Retrieves verified health facts from ChromaDB knowledge base.
-    Uses multilingual-e5-large for cross-language matching —
-    a Hausa claim will match an English WHO fact correctly.
-
-    Must call ingest_all() from ingestion.py first to populate
-    the knowledge base before retrieval works.
-    """
 
     def __init__(self):
         self._collection = None
@@ -68,7 +56,6 @@ class RAGRetriever:
         self._init()
 
     def _init(self) -> None:
-        """Connect to ChromaDB. Fails gracefully if not yet ingested."""
         kb_path = Path(CHROMA_PATH)
         if not kb_path.exists():
             log.warning(
@@ -107,19 +94,6 @@ class RAGRetriever:
         post_text: str,
         language:  Optional[str] = None,
     ) -> List[EvidenceRecord]:
-        """
-        Retrieve top-5 verified facts most relevant to the post.
-
-        Args:
-            post_text: The misinformation post content.
-            language:  Post language code (en/pcm/ha/yo/ig).
-                       multilingual-e5-large handles cross-language
-                       matching automatically.
-
-        Returns:
-            List of EvidenceRecord objects above similarity threshold.
-            Empty list if knowledge base is not ready or no match found.
-        """
         if not self._ready:
             log.warning("RAG not ready — returning empty evidence")
             return []
@@ -173,10 +147,6 @@ class RAGRetriever:
         post_text: str,
         language:  Optional[str] = None,
     ) -> List[dict]:
-        """
-        Same as retrieve() but returns plain dicts.
-        Used by FastAPI routes to serialise response.
-        """
         return [e.to_dict() for e in self.retrieve(post_text, language)]
 
 
@@ -191,7 +161,6 @@ _st_lock  = threading.Lock()
 
 
 def preload_embedder() -> None:
-    """Called at startup to warm the SentenceTransformer before first request."""
     try:
         _get_st_model()
         log.info("Embedding model loaded and ready.")
@@ -200,7 +169,6 @@ def preload_embedder() -> None:
 
 
 def _get_st_model():
-    """Lazy singleton — loads multilingual-e5-large once and reuses it."""
     global _st_model
     if _st_model is not None:
         return _st_model
@@ -217,22 +185,12 @@ def is_embedder_ready() -> bool:
 
 
 def embed_text(text: str) -> List[float]:
-    """
-    Embed a single text string.
-    Prefix 'query: ' is required by multilingual-e5 models for query inputs.
-    Returns list of 768 floats (multilingual-e5-base).
-    """
     model = _get_st_model()
     vec   = model.encode(f"query: {text}", normalize_embeddings=True)
     return vec.tolist()
 
 
 def embed_batch(items: List[dict]) -> List[dict]:
-    """
-    Embed multiple items.
-    items: list of {"doc_id": str, "text": str}
-    Returns: list of {"doc_id": str, "embedding": list[float]}
-    """
     model   = _get_st_model()
     texts   = [f"query: {it['text']}" for it in items]
     vecs    = model.encode(texts, normalize_embeddings=True, batch_size=32)
