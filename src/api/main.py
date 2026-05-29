@@ -27,7 +27,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 load_dotenv()
 
@@ -193,9 +193,22 @@ async def root():
         "status":      "running",
         "docs":        "/docs",
         "health":      "/health",
+        "dashboard":   "/dashboard",
         "classify":    "POST /classify",
         "batch":       "POST /classify/batch",
     }
+
+
+# ---------------------------------------------------------------------------
+# GET /dashboard — serve the HTML dashboard, no auth required
+# ---------------------------------------------------------------------------
+@app.get("/dashboard", include_in_schema=False)
+async def dashboard():
+    """Serve the monitoring dashboard HTML page."""
+    path = Path("dashboard.html")
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Dashboard not found")
+    return FileResponse(path, media_type="text/html")
 
 
 # ---------------------------------------------------------------------------
