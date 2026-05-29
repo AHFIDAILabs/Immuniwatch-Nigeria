@@ -27,16 +27,19 @@ jobs:
       - name: Upload code to HuggingFace Spaces
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_SPACE_REPO: ${{ secrets.HF_SPACE_REPO }}
         run: |
           python - <<'EOF'
           import os
           from huggingface_hub import HfApi
 
-          api = HfApi(token=os.environ["HF_TOKEN"])
+          token = os.environ.get("HF_TOKEN", "")
+          if not token:
+              raise SystemExit("HF_TOKEN secret is not set in GitHub repository settings.")
+
+          api = HfApi(token=token)
           api.upload_folder(
               folder_path=".",
-              repo_id=os.environ["HF_SPACE_REPO"],
+              repo_id="AHFIDAILabs/immuniwatch-ml-service",
               repo_type="space",
               commit_message="Deploy from GitHub Actions",
               ignore_patterns=[
@@ -46,6 +49,7 @@ jobs:
                   ".pytest_cache/**", ".git/**",
                   "temp_test.py", "docker-compose.yml",
                   "deploy_to_hf.py",
+                  ".claude/**",
                   "**/*.onnx", "**/*.onnx.data",
                   "**/*.safetensors", "**/*.bin",
                   "**/*.pt", "**/*.pkl",
