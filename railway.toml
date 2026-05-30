@@ -1,0 +1,7 @@
+[build]
+builder = "nixpacks"
+buildCommand = "pip install -r requirements-worker.txt"
+
+[deploy]
+startCommand = "python -m src.ingestion.direct_runner"
+restartPolicyType = "always"
