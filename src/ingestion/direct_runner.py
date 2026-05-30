@@ -19,7 +19,7 @@ def _classify_direct(post) -> None:
 
     payload = {
         "post_id":     post.post_id,
-        "content":     post.content,
+        "content":     post.content_text,
         "language":    post.language,
         "location":    post.location_raw,
         "platform":    post.platform,
