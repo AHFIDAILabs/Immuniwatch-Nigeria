@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-ML_SERVICE_URL = os.environ.get("ML_SERVICE_URL", "http://localhost:8001")
+ML_SERVICE_URL = os.environ.get("ML_SERVICE_URL", "http://localhost:8000")
 API_KEY        = os.environ.get("API_KEY", "")
 
 MAX_RETRIES   = 3

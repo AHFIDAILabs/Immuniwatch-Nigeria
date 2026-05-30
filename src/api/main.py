@@ -83,6 +83,21 @@ def _download_model_files() -> None:
 # ---------------------------------------------------------------------------
 # Startup
 # ---------------------------------------------------------------------------
+def _start_ingestion_worker() -> None:
+    bluesky_handle = os.environ.get("BLUESKY_HANDLE", "")
+    youtube_key    = os.environ.get("YOUTUBE_API_KEY", "")
+    if not bluesky_handle and not youtube_key:
+        log.info("No connector credentials — ingestion worker not started.")
+        return
+    try:
+        from src.ingestion.direct_runner import run as run_ingestion
+        t = threading.Thread(target=run_ingestion, daemon=True, name="ingestion-worker")
+        t.start()
+        log.info("Ingestion worker started in background thread.")
+    except Exception as exc:
+        log.warning("Ingestion worker failed to start: %s", exc)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from src.models.classifier import load as load_classifier
@@ -98,6 +113,7 @@ async def lifespan(app: FastAPI):
         hf_token=       HF_TOKEN or None,
     )
     preload_embedder()
+    _start_ingestion_worker()
     log.info("Service ready on port %d", PORT)
     yield
     log.info("Service shutting down.")
