@@ -326,13 +326,7 @@ async def metrics():
                                              misinfo.get("precision", 0.0)), 4),
             "latency_p95_ms":  int(cfg.get("avg_latency_ms", 0)),
         },
-        "by_language": {
-            "en":  {"macro_f1": 0.830, "recall": 0.855, "psi": 0.0},
-            "pcm": {"macro_f1": 0.827, "recall": 0.849, "psi": 0.0},
-            "ha":  {"macro_f1": 0.687, "recall": 0.712, "psi": 0.0},
-            "ig":  {"macro_f1": 0.690, "recall": 0.715, "psi": 0.0},
-            "yo":  {"macro_f1": 0.559, "recall": 0.581, "psi": 0.0},
-        },
+        "by_language": cfg.get("language_metrics", {}),
         "computed_at": _now(),
     }
 
