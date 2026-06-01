@@ -1,5 +1,6 @@
 import logging
 import threading
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -13,11 +14,80 @@ class DeployRequest(BaseModel):
     approved_text: str
 
 
+class GenerateRequest(BaseModel):
+    post_id:           str
+    content:           str
+    platform:          str
+    language:          Optional[str] = None
+    author_handle:     str = ""
+    original_post_cid: str = ""
+
+
 @cn_router.get("/pending")
 async def get_pending(limit: int = 50):
     from src.api.counter_narrative_store import get_pending
     items = get_pending(min(limit, 100))
     return {"items": items, "count": len(items)}
+
+
+@cn_router.get("/{post_id}")
+async def get_by_post_id(post_id: str):
+    from src.api.counter_narrative_store import get_by_post_id as _get
+    item = _get(post_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="No counter-narrative found for this post_id")
+    return item
+
+
+@cn_router.post("/generate")
+async def generate_on_demand(body: GenerateRequest):
+    from src.intelligence.counter import generate_counter_response
+    from src.intelligence.rag import RAGRetriever
+    from src.api.counter_narrative_store import queue_post, get_by_post_id
+
+    existing = get_by_post_id(body.post_id)
+    if existing and existing.get("generated_short"):
+        return existing
+
+    retriever = RAGRetriever()
+    evidence  = retriever.retrieve(body.content, language=body.language)
+    snippets  = [e.snippet for e in evidence]
+    sources   = [e.source_url for e in evidence if e.source_url]
+
+    counter = generate_counter_response(
+        post_id=           body.post_id,
+        claim=             body.content,
+        language=          body.language or "en",
+        evidence_snippets= snippets,
+        source_urls=       sources,
+    )
+    if counter is None:
+        raise HTTPException(status_code=503, detail="Counter-narrative generation failed")
+
+    queue_post(
+        post_id=           body.post_id,
+        platform=          body.platform,
+        author_handle=     body.author_handle,
+        original_post_uri= body.post_id,
+        original_post_cid= body.original_post_cid,
+        content_snippet=   body.content[:280],
+        label=             "misinformation",
+        confidence=        1.0,
+        language=          body.language or "en",
+        generated_short=   counter.short,
+        generated_medium=  counter.medium,
+        generated_long=    counter.long,
+        sources=           counter.sources,
+    )
+
+    return {
+        "post_id":          body.post_id,
+        "generated_short":  counter.short,
+        "generated_medium": counter.medium,
+        "generated_long":   counter.long,
+        "sources":          counter.sources,
+        "status":           "pending",
+    }
 
 
 @cn_router.get("/history")

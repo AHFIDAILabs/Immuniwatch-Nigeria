@@ -85,6 +85,14 @@ def queue_post(
         con.commit()
 
 
+def get_by_post_id(post_id: str) -> Optional[dict]:
+    with _lock, _conn() as con:
+        row = con.execute(
+            "SELECT * FROM cn_queue WHERE post_id=?", (post_id,)
+        ).fetchone()
+    return _row_to_dict(row) if row else None
+
+
 def get_pending(limit: int = 50) -> List[dict]:
     with _lock, _conn() as con:
         rows = con.execute(
