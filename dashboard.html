@@ -718,6 +718,208 @@
       .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
       .metrics-overall { grid-template-columns: 1fr 1fr; }
     }
+
+    /* ─── Counter-Narrative Tab ──────────────────────────────── */
+    .cn-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 100px;
+      background: var(--red);
+      color: #fff;
+      font-size: .65rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1;
+    }
+
+    .cn-badge.zero {
+      background: var(--surface3);
+      color: var(--text-dim);
+    }
+
+    .cn-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .cn-card:last-child { margin-bottom: 0; }
+
+    .cn-card-header {
+      padding: .65rem 1rem;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
+
+    .cn-platform {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      font-size: .7rem;
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      padding: .1rem .4rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .cn-handle {
+      font-size: .75rem;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .cn-conf {
+      font-size: .72rem;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      margin-left: auto;
+    }
+
+    .cn-snippet {
+      font-size: .8rem;
+      color: var(--text-muted);
+      padding: .6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-style: italic;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cn-body {
+      padding: .75rem 1rem;
+    }
+
+    .cn-label {
+      font-size: .7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--text-dim);
+      margin-bottom: .3rem;
+    }
+
+    .cn-textarea {
+      width: 100%;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: .83rem;
+      padding: .55rem .75rem;
+      outline: none;
+      resize: vertical;
+      min-height: 80px;
+      line-height: 1.5;
+      transition: border-color .15s;
+    }
+
+    .cn-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47,129,247,.15); }
+
+    .cn-actions {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-top: .65rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-deploy {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid rgba(63,185,80,.35);
+    }
+    .btn-deploy:hover { background: rgba(63,185,80,.18); }
+    .btn-deploy:disabled { opacity: .45; cursor: not-allowed; }
+
+    .btn-skip {
+      background: var(--surface3);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-skip:hover { background: var(--border); }
+    .btn-skip:disabled { opacity: .45; cursor: not-allowed; }
+
+    .cn-result-msg {
+      font-size: .78rem;
+      padding: .35rem .6rem;
+      border-radius: 4px;
+      display: none;
+    }
+
+    .cn-result-msg.ok  { background: var(--green-bg); color: var(--green); border: 1px solid rgba(63,185,80,.25); }
+    .cn-result-msg.err { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(248,81,73,.25); }
+
+    .cn-manual-link {
+      font-size: .78rem;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .cn-manual-link:hover { text-decoration: underline; }
+
+    .cn-history-section {
+      margin-top: 1.25rem;
+    }
+
+    .cn-history-title {
+      font-size: .72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      color: var(--text-dim);
+      margin-bottom: .75rem;
+      padding-bottom: .4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cn-history-item {
+      display: flex;
+      align-items: flex-start;
+      gap: .6rem;
+      padding: .55rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: .78rem;
+    }
+
+    .cn-history-item:last-child { border-bottom: none; }
+
+    .cn-status-chip {
+      display: inline-block;
+      font-size: .67rem;
+      font-family: 'JetBrains Mono', monospace;
+      padding: .1rem .4rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .chip-deployed { background: var(--green-bg); color: var(--green); border: 1px solid rgba(63,185,80,.25); }
+    .chip-skipped  { background: var(--gray-bg);  color: var(--gray-label); border: 1px solid var(--border); }
+    .chip-failed   { background: var(--red-bg);   color: var(--red); border: 1px solid rgba(248,81,73,.25); }
+
+    .cn-history-meta {
+      color: var(--text-muted);
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   </style>
 </head>
 <body>
@@ -880,6 +1082,20 @@
         </div>
       </div>
       <div class="feed-last-updated" id="feedLastUpdated">Not yet loaded</div>
+    </div>
+
+    <!-- Counter-Narratives -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">&#128172;</span>
+        <h2>Counter-Narratives</h2>
+        <span class="cn-badge zero" id="cnPendingBadge">0</span>
+        <span style="font-size:.72rem;color:var(--text-dim);margin-left:.25rem;">pending</span>
+        <button class="refresh-btn" id="refreshCN" style="margin-left:auto;" title="Refresh counter-narratives">&#8635; Refresh</button>
+      </div>
+      <div id="cnBody" style="padding:1.25rem;">
+        <div class="loading-block"><div class="spinner-sm"></div>Loading counter-narratives&hellip;</div>
+      </div>
     </div>
 
   </main>
@@ -1387,12 +1603,196 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+/* ── Counter-Narratives ─────────────────────────────────────── */
+const CN_INTERVAL_MS = 30_000;
+let cnIntervalId = null;
+
+const cnEl = {
+  body:        $('cnBody'),
+  badge:       $('cnPendingBadge'),
+  refreshBtn:  $('refreshCN'),
+};
+
+cnEl.refreshBtn.addEventListener('click', fetchCN);
+
+async function fetchCN() {
+  try {
+    const [pendRes, histRes] = await Promise.all([
+      apiFetch('/counter-narrative/pending?limit=50'),
+      apiFetch('/counter-narrative/history?limit=30'),
+    ]);
+    if (!pendRes.ok || !histRes.ok) {
+      cnEl.body.innerHTML = '<div style="padding:.5rem;font-size:.82rem;color:var(--text-dim);">Could not load counter-narratives. Check API key.</div>';
+      return;
+    }
+    const pending = await pendRes.json();
+    const history = await histRes.json();
+    renderCN(pending, history);
+  } catch (err) {
+    cnEl.body.innerHTML = `<div style="padding:.5rem;font-size:.82rem;color:var(--text-dim);">Error: ${escHtml(err.message)}</div>`;
+  }
+}
+
+function renderCN(pending, history) {
+  const items   = pending.items  || [];
+  const count   = pending.count  || 0;
+  const hitems  = history.items  || [];
+
+  cnEl.badge.textContent = count;
+  cnEl.badge.className   = count > 0 ? 'cn-badge' : 'cn-badge zero';
+
+  let html = '';
+
+  if (!items.length) {
+    html += `<div class="result-empty" style="padding:1.5rem;">
+      <div class="empty-icon">&#128172;</div>
+      <div>No pending counter-narratives.</div>
+      <div style="margin-top:.3rem;font-size:.75rem;color:var(--text-dim);">They appear here when misinformation posts are detected.</div>
+    </div>`;
+  } else {
+    html += `<div style="margin-bottom:.75rem;font-size:.78rem;color:var(--text-muted);">${count} item${count !== 1 ? 's' : ''} awaiting moderator review</div>`;
+    items.forEach(item => {
+      const platformIcon = item.platform === 'bluesky' ? '&#9928;' : '&#9654;';
+      const handleHtml   = item.author_handle
+        ? `<span class="cn-handle">@${escHtml(item.author_handle)}</span>`
+        : '';
+      const confPct = ((item.confidence || 0) * 100).toFixed(0) + '%';
+      const shortText = escHtml(item.generated_short || item.generated_medium || '');
+
+      html += `
+        <div class="cn-card" id="cn-card-${escHtml(item.post_id)}">
+          <div class="cn-card-header">
+            <span class="cn-platform">${platformIcon} ${escHtml(item.platform)}</span>
+            ${handleHtml}
+            <span class="cn-conf">conf ${confPct} &middot; ${escHtml(item.language || 'en')}</span>
+          </div>
+          <div class="cn-snippet" title="${escHtml(item.content_snippet || '')}">&ldquo;${escHtml((item.content_snippet || '').slice(0, 120))}&rdquo;</div>
+          <div class="cn-body">
+            <div class="cn-label">Counter-narrative (editable before deploy)</div>
+            <textarea class="cn-textarea" id="cn-text-${escHtml(item.post_id)}" rows="4">${shortText}</textarea>
+            <div class="cn-actions">
+              <button class="btn btn-deploy" onclick="deployCN(${JSON.stringify(item.post_id)})">&#10003; Deploy Reply</button>
+              <button class="btn btn-skip"   onclick="skipCN(${JSON.stringify(item.post_id)})">Skip</button>
+              <span class="cn-result-msg" id="cn-msg-${escHtml(item.post_id)}"></span>
+            </div>
+          </div>
+        </div>`;
+    });
+  }
+
+  if (hitems.length) {
+    html += `<div class="cn-history-section">
+      <div class="cn-history-title">Recent History</div>`;
+    hitems.forEach(item => {
+      const chipClass = item.status === 'deployed' ? 'chip-deployed'
+                      : item.status === 'skipped'  ? 'chip-skipped'
+                      : 'chip-failed';
+      const metaText  = item.reply_uri
+        ? `<a href="${escHtml(item.reply_uri)}" target="_blank" class="cn-manual-link">View reply</a>`
+        : item.manual_url
+          ? `<a href="${escHtml(item.manual_url)}" target="_blank" class="cn-manual-link">Open on YouTube</a>`
+          : escHtml((item.content_snippet || '').slice(0, 80));
+      html += `
+        <div class="cn-history-item">
+          <span class="cn-status-chip ${chipClass}">${escHtml(item.status)}</span>
+          <span class="cn-platform" style="font-size:.67rem;">${escHtml(item.platform)}</span>
+          <span class="cn-history-meta">${metaText}</span>
+        </div>`;
+    });
+    html += '</div>';
+  }
+
+  cnEl.body.innerHTML = html;
+}
+
+async function deployCN(postId) {
+  const textEl = $('cn-text-' + postId);
+  const msgEl  = $('cn-msg-' + postId);
+  if (!textEl || !msgEl) return;
+
+  const approvedText = textEl.value.trim();
+  if (approvedText.length < 5) {
+    showCNMsg(msgEl, 'Text is too short.', false);
+    return;
+  }
+
+  setcnBtns(postId, true);
+  try {
+    const res = await apiFetch(`/counter-narrative/${encodeURIComponent(postId)}/deploy`, {
+      method: 'POST',
+      body:   JSON.stringify({ approved_text: approvedText }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showCNMsg(msgEl, data.detail || 'Deploy failed.', false);
+      setcnBtns(postId, false);
+      return;
+    }
+    if (data.status === 'deployed') {
+      const extra = data.reply_uri
+        ? ` &mdash; <a href="${escHtml(data.reply_uri)}" target="_blank" class="cn-manual-link">View reply</a>`
+        : '';
+      showCNMsg(msgEl, 'Deployed!' + extra, true);
+    } else if (data.status === 'manual_required') {
+      const extra = data.manual_url
+        ? ` &mdash; <a href="${escHtml(data.manual_url)}" target="_blank" class="cn-manual-link">Open on YouTube</a>`
+        : '';
+      showCNMsg(msgEl, 'Manual posting required.' + extra, true);
+    }
+    setTimeout(() => fetchCN(), 1500);
+  } catch (err) {
+    showCNMsg(msgEl, 'Error: ' + escHtml(err.message), false);
+    setcnBtns(postId, false);
+  }
+}
+
+async function skipCN(postId) {
+  const msgEl = $('cn-msg-' + postId);
+  if (!msgEl) return;
+  setcnBtns(postId, true);
+  try {
+    const res = await apiFetch(`/counter-narrative/${encodeURIComponent(postId)}/skip`, {
+      method: 'POST',
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      showCNMsg(msgEl, data.detail || 'Skip failed.', false);
+      setcnBtns(postId, false);
+      return;
+    }
+    showCNMsg(msgEl, 'Skipped.', true);
+    setTimeout(() => fetchCN(), 1000);
+  } catch (err) {
+    showCNMsg(msgEl, 'Error: ' + escHtml(err.message), false);
+    setcnBtns(postId, false);
+  }
+}
+
+function showCNMsg(el, html, ok) {
+  el.innerHTML   = html;
+  el.className   = 'cn-result-msg ' + (ok ? 'ok' : 'err');
+  el.style.display = 'inline-block';
+}
+
+function setcnBtns(postId, disabled) {
+  const card = $('cn-card-' + postId);
+  if (!card) return;
+  card.querySelectorAll('.btn-deploy, .btn-skip').forEach(b => { b.disabled = disabled; });
+}
+
+function startCNPolling() {
+  clearInterval(cnIntervalId);
+  fetchCN();
+  cnIntervalId = setInterval(fetchCN, CN_INTERVAL_MS);
+}
+
 /* ── Init ───────────────────────────────────────────────────── */
 (function init() {
   loadSettings();
   startHealthPolling();
   loadMetrics();
   startFeedPolling();
+  startCNPolling();
 })();
 </script>
 </body>

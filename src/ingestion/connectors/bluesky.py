@@ -197,21 +197,25 @@ class BlueskyConnector(BaseConnector):
 
             # Location: profile field / bio first, post text is the fallback
             # handled by classifier._resolve_state()
-            location_raw = self._get_author_location(author_did)
+            location_raw   = self._get_author_location(author_did)
+            author_handle  = author.get("handle", "")
+            post_cid       = item.get("cid", "")
 
             return RawPost(
-                post_id=      post_id,
-                platform=     "bluesky",
-                content_text= content,
-                content_type= "TEXT",
-                author_hash=  hash_author(author_did),
-                language=     None,
-                timestamp=    ts,
-                ingestion_ts= datetime.now(timezone.utc),
-                raw_url=      None,
-                location_raw= location_raw,
-                likes=        item.get("likeCount"),
-                shares=       item.get("repostCount"),
+                post_id=           post_id,
+                platform=          "bluesky",
+                content_text=      content,
+                content_type=      "TEXT",
+                author_hash=       hash_author(author_did),
+                language=          None,
+                timestamp=         ts,
+                ingestion_ts=      datetime.now(timezone.utc),
+                raw_url=           None,
+                location_raw=      location_raw,
+                likes=             item.get("likeCount"),
+                shares=            item.get("repostCount"),
+                author_handle=     author_handle,
+                original_post_cid= post_cid,
             )
         except Exception as e:
             log.error("Failed to parse Bluesky post: %s", e)

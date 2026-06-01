@@ -81,6 +81,15 @@ def _classify_one(req: ClassifyRequest) -> ClassifyResponse:
         for i, s in enumerate(req.kb_snippets)
     ]
 
+    queued = False
+    if result["label"] == "misinformation":
+        threading.Thread(
+            target=_queue_counter_narrative,
+            args=(req, result),
+            daemon=True,
+        ).start()
+        queued = True
+
     response = ClassifyResponse(
         post_id=req.post_id,
         label=result["label"],
@@ -93,6 +102,7 @@ def _classify_one(req: ClassifyRequest) -> ClassifyResponse:
         alternatives=[Alternative(**a) for a in result["alternatives"]],
         processing_ms=result["processing_ms"],
         kb_evidence=kb_evidence,
+        counter_response_queued=queued,
     )
 
     # Record in live feed
@@ -109,9 +119,52 @@ def _classify_one(req: ClassifyRequest) -> ClassifyResponse:
             "state":           result.get("state"),
             "platform":        req.platform,
             "classified_at":   _now(),
+            "author_handle":   getattr(req, "author_handle", ""),
         })
 
     return response
+
+
+def _queue_counter_narrative(req: ClassifyRequest, result: dict) -> None:
+    try:
+        from src.intelligence.counter import generate_counter_response
+        from src.intelligence.rag import RAGRetriever
+        from src.api.counter_narrative_store import queue_post
+
+        retriever = RAGRetriever()
+        evidence  = retriever.retrieve(req.content, language=result.get("language"))
+        snippets  = [e.snippet for e in evidence]
+        sources   = [e.source_url for e in evidence if e.source_url]
+
+        counter = generate_counter_response(
+            post_id=           req.post_id,
+            claim=             req.content,
+            language=          result.get("language", "en"),
+            evidence_snippets= snippets,
+            source_urls=       sources,
+        )
+        if counter is None:
+            log.warning("Counter-narrative generation returned None for %s", req.post_id)
+            return
+
+        queue_post(
+            post_id=           req.post_id,
+            platform=          req.platform,
+            author_handle=     req.author_handle,
+            original_post_uri= req.post_id,
+            original_post_cid= req.original_post_cid,
+            content_snippet=   req.content[:280],
+            label=             result["label"],
+            confidence=        result["confidence"],
+            language=          result.get("language", "en"),
+            generated_short=   counter.short,
+            generated_medium=  counter.medium,
+            generated_long=    counter.long,
+            sources=           counter.sources,
+        )
+        log.info("Counter-narrative queued for post_id=%s", req.post_id)
+    except Exception as exc:
+        log.error("Counter-narrative queuing failed for %s: %s", req.post_id, exc)
 
 
 # ---------------------------------------------------------------------------

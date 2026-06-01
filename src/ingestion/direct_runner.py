@@ -18,12 +18,14 @@ def _classify_direct(post) -> None:
     api_key = os.environ.get("API_KEY", "")
 
     payload = {
-        "post_id":     post.post_id,
-        "content":     post.content_text,
-        "language":    post.language,
-        "location":    post.location_raw,
-        "platform":    post.platform,
-        "kb_snippets": [],
+        "post_id":           post.post_id,
+        "content":           post.content_text,
+        "language":          post.language,
+        "location":          post.location_raw,
+        "platform":          post.platform,
+        "kb_snippets":       [],
+        "author_handle":     post.author_handle,
+        "original_post_cid": post.original_post_cid,
     }
     headers = {
         "Content-Type": "application/json",

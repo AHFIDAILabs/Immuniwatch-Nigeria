@@ -156,9 +156,10 @@ class YouTubeConnector(BaseConnector):
             if not content or len(content) < 5:
                 return None
 
-            author_id   = snippet.get(
+            author_id     = snippet.get(
                 "authorChannelId", {}
             ).get("value", comment_id)
+            author_handle = snippet.get("authorDisplayName", "")
 
             ts_str = snippet.get("publishedAt", "")
             try:
@@ -167,21 +168,22 @@ class YouTubeConnector(BaseConnector):
                 ts = datetime.now(timezone.utc)
 
             return RawPost(
-                post_id=      comment_id,
-                platform=     "youtube",
-                content_text= content,
-                content_type= "TEXT",
-                author_hash=  hash_author(author_id),
-                language=     None,
-                timestamp=    ts,
-                ingestion_ts= datetime.now(timezone.utc),
-                raw_url=      f"https://www.youtube.com/watch?v={video_id}",
+                post_id=           comment_id,
+                platform=          "youtube",
+                content_text=      content,
+                content_type=      "TEXT",
+                author_hash=       hash_author(author_id),
+                language=          None,
+                timestamp=         ts,
+                ingestion_ts=      datetime.now(timezone.utc),
+                raw_url=           f"https://www.youtube.com/watch?v={video_id}",
                 # Channel country requires a separate channels.list API call
                 # (costs additional quota units). On free tier the classifier
                 # extracts state from the comment text as fallback.
-                location_raw= None,
-                likes=        snippet.get("likeCount"),
-                shares=       None,
+                location_raw=      None,
+                likes=             snippet.get("likeCount"),
+                shares=            None,
+                author_handle=     author_handle,
             )
         except Exception as e:
             log.error("Failed to parse YouTube comment: %s", e)

@@ -20,26 +20,30 @@ class RawPost:
     language:     Optional[str]   # en|pcm|ha|yo|ig — None means auto-detect
     timestamp:    datetime
     ingestion_ts: datetime
-    raw_url:      Optional[str] = None
-    location_raw: Optional[str] = None
-    likes:        Optional[int] = None
-    shares:       Optional[int] = None
+    raw_url:           Optional[str] = None
+    location_raw:      Optional[str] = None
+    likes:             Optional[int] = None
+    shares:            Optional[int] = None
+    author_handle:     str = ""
+    original_post_cid: str = ""
 
     def to_kafka_message(self) -> dict:
         return {
-            "schema_version": "1.0",
-            "post_id":        self.post_id,
-            "platform":       self.platform,
-            "content":        self.content_text,
-            "content_type":   self.content_type,
-            "author_hash":    self.author_hash,
-            "language":       self.language,
-            "raw_url":        self.raw_url,
-            "location_raw":   self.location_raw,
-            "likes":          self.likes,
-            "shares":         self.shares,
-            "timestamp":      self.timestamp.isoformat(),
-            "ingestion_ts":   self.ingestion_ts.isoformat(),
+            "schema_version":    "1.0",
+            "post_id":           self.post_id,
+            "platform":          self.platform,
+            "content":           self.content_text,
+            "content_type":      self.content_type,
+            "author_hash":       self.author_hash,
+            "language":          self.language,
+            "raw_url":           self.raw_url,
+            "location_raw":      self.location_raw,
+            "likes":             self.likes,
+            "shares":            self.shares,
+            "author_handle":     self.author_handle,
+            "original_post_cid": self.original_post_cid,
+            "timestamp":         self.timestamp.isoformat(),
+            "ingestion_ts":      self.ingestion_ts.isoformat(),
         }
 
 

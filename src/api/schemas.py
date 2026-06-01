@@ -24,27 +24,30 @@ class KBEvidence(BaseModel):
 # ---------------------------------------------------------------------------
 
 class ClassifyRequest(BaseModel):
-    post_id:     str
-    content:     str = Field(..., max_length=4096)
-    language:    Optional[str] = None
-    location:    Optional[str] = None   # raw location string from connector (profile or metadata)
-    platform:    str
-    context:     Optional[str] = None
-    kb_snippets: List[str] = []
+    post_id:           str
+    content:           str = Field(..., max_length=4096)
+    language:          Optional[str] = None
+    location:          Optional[str] = None   # raw location string from connector (profile or metadata)
+    platform:          str
+    context:           Optional[str] = None
+    kb_snippets:       List[str] = []
+    author_handle:     str = ""
+    original_post_cid: str = ""
 
 
 class ClassifyResponse(BaseModel):
-    post_id:       str
-    label:         str
-    confidence:    float
-    entropy:       float
-    language:      Optional[str]
-    state:         Optional[str]
-    platform:      str
-    model_version: str
-    alternatives:  List[Alternative]
-    processing_ms: int
-    kb_evidence:   List[KBEvidence] = []
+    post_id:                  str
+    label:                    str
+    confidence:               float
+    entropy:                  float
+    language:                 Optional[str]
+    state:                    Optional[str]
+    platform:                 str
+    model_version:            str
+    alternatives:             List[Alternative]
+    processing_ms:            int
+    kb_evidence:              List[KBEvidence] = []
+    counter_response_queued:  bool = False
 
 
 # ---------------------------------------------------------------------------
