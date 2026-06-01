@@ -286,7 +286,7 @@ def test_generate_returns_none_for_empty_claim():
     assert result is None
 
 
-def test_generate_returns_none_for_no_evidence():
+def test_generate_uses_groq_knowledge_when_no_evidence():
     result = generate_counter_response(
         post_id="test-001",
         claim="Vaccine causes infertility",
@@ -294,7 +294,10 @@ def test_generate_returns_none_for_no_evidence():
         evidence_snippets=[],
         source_urls=[],
     )
-    assert result is None
+    assert result is not None
+    assert result.short
+    assert result.medium
+    assert result.long
 
 
 def test_generate_defaults_language_to_en_when_none():

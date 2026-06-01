@@ -78,24 +78,27 @@ def _build_prompt(
     else:
         length_instruction = f"Write in {lang_name}. Maximum 500 words. Be thorough with explanation and sources."
 
-    evidence_text = "\n".join(
-        f"- {snippet[:300]}" for snippet in evidence_snippets[:3]
-    )
+    if evidence_snippets:
+        evidence_block = "VERIFIED EVIDENCE FROM WHO/NPHCDA:\n" + "\n".join(
+            f"- {snippet[:300]}" for snippet in evidence_snippets[:3]
+        ) + "\n\nTASK: Write a counter-response that:\n1. Directly addresses the claim with facts\n2. Uses ONLY the evidence provided above — do not add facts not in the evidence\n3. Is culturally appropriate for Nigerian audiences\n4. Does not use technical jargon\n5. " + length_instruction
+    else:
+        evidence_block = (
+            "TASK: Write a counter-response that:\n"
+            "1. Directly addresses the claim using established vaccine science\n"
+            "2. References WHO guidelines and NPHCDA vaccination programmes where relevant\n"
+            "3. Is specific to the Nigerian public health context\n"
+            "4. Is culturally appropriate for Nigerian audiences\n"
+            "5. Does not use technical jargon\n"
+            f"6. {length_instruction}"
+        )
 
-    return f"""You are a public health communication expert for Nigeria.
+    return f"""You are a public health communication expert for Nigeria's NPHCDA.
 A vaccine misinformation claim needs a factual counter-response.
 
 CLAIM: {claim}
 
-VERIFIED EVIDENCE FROM WHO/NPHCDA:
-{evidence_text}
-
-TASK: Write a counter-response that:
-1. Directly addresses the claim with facts
-2. Uses ONLY the evidence provided above — do not add facts not in the evidence
-3. Is culturally appropriate for Nigerian audiences
-4. Does not use technical jargon
-5. {length_instruction}
+{evidence_block}
 
 Write only the counter-response text. No preamble, no labels."""
 
@@ -174,10 +177,6 @@ def generate_counter_response(
 ) -> Optional[CounterResponse]:
     if not claim or len(claim.strip()) < 5:
         log.warning("Claim too short to generate counter-response")
-        return None
-
-    if not evidence_snippets:
-        log.warning("No evidence provided — skipping counter-response for %s", post_id)
         return None
 
     lang = language or "en"
