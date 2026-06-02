@@ -287,13 +287,15 @@ def test_generate_returns_none_for_empty_claim():
 
 
 def test_generate_uses_groq_knowledge_when_no_evidence():
-    result = generate_counter_response(
-        post_id="test-001",
-        claim="Vaccine causes infertility",
-        language="en",
-        evidence_snippets=[],
-        source_urls=[],
-    )
+    from unittest.mock import patch
+    with patch("src.intelligence.counter._generate", return_value="Vaccines are safe and effective according to WHO guidelines."):
+        result = generate_counter_response(
+            post_id="test-001",
+            claim="Vaccine causes infertility",
+            language="en",
+            evidence_snippets=[],
+            source_urls=[],
+        )
     assert result is not None
     assert result.short
     assert result.medium
