@@ -198,3 +198,94 @@ def embed_batch(items: List[dict]) -> List[dict]:
         {"doc_id": item["doc_id"], "embedding": vec.tolist()}
         for item, vec in zip(items, vecs)
     ]
+
+
+# ---------------------------------------------------------------------------
+# Knowledge base management — used by /knowledge-base/* endpoints
+# ---------------------------------------------------------------------------
+def _get_or_create_collection():
+    import chromadb
+    from chromadb.utils import embedding_functions
+    Path(CHROMA_PATH).mkdir(parents=True, exist_ok=True)
+    client = chromadb.PersistentClient(path=CHROMA_PATH)
+    ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name=EMBEDDING_MODEL, device="cpu"
+    )
+    try:
+        return client.get_collection(name=COLLECTION_NAME, embedding_function=ef)
+    except Exception:
+        return client.create_collection(name=COLLECTION_NAME, embedding_function=ef)
+
+
+def get_kb_status() -> dict:
+    try:
+        col   = _get_or_create_collection()
+        count = col.count()
+        docs  = []
+        if count > 0:
+            results   = col.get(include=["metadatas"])
+            metadatas = results.get("metadatas", [])
+            seen: dict = {}
+            for m in metadatas:
+                doc_id = m.get("doc_id", m.get("source", ""))
+                if doc_id not in seen:
+                    seen[doc_id] = {
+                        "doc_id":   doc_id,
+                        "title":    m.get("source", ""),
+                        "url":      m.get("url", ""),
+                        "language": m.get("language", "en"),
+                        "status":   "indexed",
+                    }
+            docs = list(seen.values())
+        return {
+            "ready":          count > 0,
+            "chunk_count":    count,
+            "document_count": len(docs),
+            "documents":      docs,
+        }
+    except Exception as exc:
+        log.error("KB status failed: %s", exc)
+        return {"ready": False, "chunk_count": 0, "document_count": 0, "documents": []}
+
+
+def add_document_to_kb(
+    doc_id:   str,
+    title:    str,
+    content:  str,
+    source:   str,
+    url:      str,
+    language: str,
+) -> dict:
+    try:
+        col    = _get_or_create_collection()
+        words  = content.split()
+        size   = 400
+        chunks = [" ".join(words[i:i+size]) for i in range(0, max(len(words), 1), size)]
+
+        ids       = [f"{doc_id}_chunk_{i}" for i in range(len(chunks))]
+        passages  = [f"passage: {c}" for c in chunks]
+        metadatas = [
+            {"source": title, "url": url, "language": language, "doc_id": doc_id}
+            for _ in chunks
+        ]
+        col.upsert(ids=ids, documents=passages, metadatas=metadatas)
+        log.info("KB: indexed doc_id=%s chunks=%d", doc_id, len(chunks))
+        return {"success": True, "doc_id": doc_id, "chunks_indexed": len(chunks)}
+    except Exception as exc:
+        log.error("KB add_document failed: %s", exc)
+        return {"success": False, "error": str(exc)}
+
+
+def remove_document_from_kb(doc_id: str) -> dict:
+    try:
+        col     = _get_or_create_collection()
+        results = col.get(where={"doc_id": doc_id}, include=["metadatas"])
+        ids     = results.get("ids", [])
+        if not ids:
+            return {"success": False, "error": "Document not found"}
+        col.delete(ids=ids)
+        log.info("KB: removed doc_id=%s (%d chunks)", doc_id, len(ids))
+        return {"success": True, "doc_id": doc_id, "chunks_removed": len(ids)}
+    except Exception as exc:
+        log.error("KB remove_document failed: %s", exc)
+        return {"success": False, "error": str(exc)}
