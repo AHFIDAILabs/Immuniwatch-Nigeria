@@ -49,22 +49,37 @@ LANG_NORMALISE = {
 _HA_RE = re.compile(
     r'\b(gaskia|rigakafi|rigakafin|mallam|sannu|nagode|inshallah|yanzu|yau|jiya|'
     r'lafiya|haba|karya|kowa|komai|hanya|birni|ruwa|abinci|zakar|wallahi|toh|barka|'
-    r'gida|mutane|sarki|masha|bazum|bazoum|kasuwa|talaka|gwamnati|kasa|duniya|'
-    r'Allah ya|masha allah|ya allah|ya gafarta|ya jikan|ya taimaka)\b',
+    r'gida|mutane|sarki|masha|kasuwa|talaka|gwamnati|kasa|duniya|'
+    r'Allah ya|masha allah|ya allah|ya gafarta|ya jikan|ya taimaka|'
+    r'maganin|riga kafi|lafiyar|yara|jariri|cuta|asibiti|'
+    r'kuma|amma|sai|don|dai|wai|ya kamata|suna|namu|naka|'
+    r'lokaci|shekara|wata|kwana|mutum|aikin|kasar|'
+    r'cutar|rigakafin cutar|yanci|jama\'a|hukuma)\b',
     re.IGNORECASE,
 )
-_YO_CHAR_RE = re.compile(r'[ọẹàáèéêâ]')      # tonal diacritics = strong Yoruba signal
+_YO_CHAR_RE = re.compile(r'[ọẹṣ]')
 _YO_WORD_RE = re.compile(
-    r'\b(naa|awon|fun|si|ati|tabi|jẹ|ọlọrun|ẹjọwọ|nínú|rẹ|wọn)\b',
+    r'\b(naa|awon|fun|si|ati|tabi|ọlọrun|ẹjọwọ|nínú|wọn|'
+    r'eyi|yen|ni|ko|pe|ma|ti|lo|de|wi|bi|mu|ba|'
+    r'ajesara|egbogi|ile|omo|iya|baba|eniyan|ilu|ogun|arun|'
+    r'dara|buru|pelu|lati|sibẹ|ara|ẹ|àwọn|tí|fún|'
+    r'kò|wà|jẹ|rí|ṣe|àti|tàbí|nítorí|nígbà)\b',
     re.IGNORECASE,
 )
-_IG_CHAR_RE = re.compile(r'[ụị]')              # Igbo-specific diacritics
+_IG_CHAR_RE = re.compile(r'[ụịọ]')
 _IG_WORD_RE = re.compile(
-    r'\b(nke|ndi|bụ|dị|nwere|ndị|maka|ihe|oge|ụlọ|chi)\b',
+    r'\b(nke|ndi|bụ|dị|nwere|ndị|maka|ihe|oge|ụlọ|chi|'
+    r'onye|anyị|gị|ọ bụ|ọ dị|ọ na|ọgwụ|oria|nne|nna|nwa|'
+    r'ezi|obodo|ala|mmadụ|nke a|nke ahụ|na-adị|'
+    r'adịghị|ọ bụ ezie|ụzọ|ọchịchọ|ikpe|ikike)\b',
     re.IGNORECASE,
 )
 _PCM_RE = re.compile(
-    r'\b(dey|wetin|wahala|abeg|sabi|pikin|naija|una|vex|comot|oga|dem say|no be|e don)\b',
+    r'\b(dey|wetin|wahala|abeg|sabi|pikin|naija|una|vex|comot|oga|'
+    r'dem say|no be|e don|wey make|shele|beta|chop|hustle|'
+    r'e be like|na so|na wa|chai|tufiakwa|'
+    r'i no sabi|e no go|na im|na em|dis tin|dat one|'
+    r'how e take|wetin happen|e don do|dem dey|no dey)\b',
     re.IGNORECASE,
 )
 
@@ -195,11 +210,44 @@ def _resolve_language(text: str, provided: Optional[str]) -> Optional[str]:
     if best_lang[1] >= 2:
         return best_lang[0]
 
-    # Fall back to langdetect for English detection
+    # Groq-based detection — handles all 5 languages reliably
+    groq_lang = _groq_detect_language(text)
+    if groq_lang:
+        return groq_lang
+
+    # Final fallback: langdetect (English only, kept for safety)
     try:
         from langdetect import detect
         detected = detect(text)
         return "en" if detected == "en" else None
+    except Exception:
+        return None
+
+
+def _groq_detect_language(text: str) -> Optional[str]:
+    import os
+    groq_key = os.environ.get("GROQ_API_KEY", "")
+    if not groq_key:
+        return None
+    try:
+        from groq import Groq
+        client = Groq(api_key=groq_key)
+        resp = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{
+                "role": "user",
+                "content": (
+                    "Identify the language of the text below. "
+                    "Reply with ONLY one word — one of: en ha yo ig pcm unknown\n"
+                    "en=English  ha=Hausa  yo=Yoruba  ig=Igbo  pcm=Nigerian Pidgin\n\n"
+                    f"Text: {text[:300]}"
+                ),
+            }],
+            max_tokens=3,
+            temperature=0.0,
+        )
+        lang = resp.choices[0].message.content.strip().lower().split()[0]
+        return lang if lang in ("en", "ha", "yo", "ig", "pcm") else None
     except Exception:
         return None
 
