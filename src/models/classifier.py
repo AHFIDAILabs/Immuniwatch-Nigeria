@@ -194,8 +194,8 @@ def classify(text: str, language: Optional[str] = None,
 def _resolve_language(text: str, provided: Optional[str]) -> Optional[str]:
     if provided:
         normed = LANG_NORMALISE.get(provided.lower(), provided.lower())
-        # If connector explicitly signals a Nigerian language, trust it
-        if normed in ("ha", "yo", "ig", "pcm"):
+        # Trust any explicitly-provided language code
+        if normed in ("ha", "yo", "ig", "pcm", "en"):
             return normed
 
     # Score each Nigerian language by keyword/character presence
@@ -215,13 +215,17 @@ def _resolve_language(text: str, provided: Optional[str]) -> Optional[str]:
     if groq_lang:
         return groq_lang
 
-    # Final fallback: langdetect (English only, kept for safety)
+    # langdetect fallback (optional dependency)
     try:
         from langdetect import detect
         detected = detect(text)
         return "en" if detected == "en" else None
     except Exception:
-        return None
+        pass
+
+    # Default to English for non-empty text — Nigerian vaccine content that
+    # scores below the Nigerian-language threshold is almost always English/PCM.
+    return "en" if text.strip() else None
 
 
 def _groq_detect_language(text: str) -> Optional[str]:
