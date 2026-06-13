@@ -30,10 +30,15 @@ PLATFORM_MAP = {
     "blog":      "submission",
 }
 
-# Vaccine keywords — all 5 languages per system design Section 4.6
-
+# Vaccine keywords — Nigerian context, 5 terms chosen to stretch free-tier credits.
+# Free tier: 5 keywords × 4 polls/day (every 6 h) = 20 credits/day → 50 credits lasts ~2.5 days.
+# Paid tier: add more keywords and set SOCIAVAULT_POLL_INTERVAL=1800 (30 min) in Space secrets.
 VACCINE_KEYWORDS = [
-    "vaccine Nigeria",
+    "vaccine infertility",
+    "vaccine kills",
+    "vaccine microchip",
+    "COVID vaccine dangerous",
+    "polio vaccine Nigeria",
 ]
 
 
@@ -42,7 +47,7 @@ class SociaVaultConnector(BaseConnector):
     def __init__(self, on_post: Callable[[RawPost], None]):
         super().__init__(on_post)
         self.api_key       = os.environ.get("SOCIAVAULT_API_KEY", "")
-        self.poll_interval = int(os.environ.get("SOCIAVAULT_POLL_INTERVAL", 60))
+        self.poll_interval = int(os.environ.get("SOCIAVAULT_POLL_INTERVAL", 21600))
         self._thread: Optional[threading.Thread] = None
         self._dedup        = Deduplicator()
         self._last_seen_id: Optional[str] = None
@@ -165,6 +170,14 @@ class SociaVaultConnector(BaseConnector):
             except Exception:
                 ts = datetime.now(timezone.utc)
 
+            # screen_name is the @handle confirmed present in SociaVault Twitter responses
+            author_handle = (
+                item.get("screen_name") or
+                item.get("user", {}).get("screen_name") or
+                item.get("author_screen_name") or
+                ""
+            )
+
             return RawPost(
                 post_id=      post_id,
                 platform=     platform,
@@ -178,6 +191,7 @@ class SociaVaultConnector(BaseConnector):
                 location_raw= item.get("location") or item.get("region"),
                 likes=        item.get("likes_count") or item.get("likes") or item.get("favorite_count"),
                 shares=       item.get("shares_count") or item.get("shares") or item.get("retweet_count"),
+                author_handle=author_handle,
             )
         except Exception as e:
             log.error("Failed to parse SociaVault post: %s", e)
