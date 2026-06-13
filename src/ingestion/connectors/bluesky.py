@@ -58,9 +58,11 @@ class BlueskyConnector(BaseConnector):
             )
             return
 
-        if not self._authenticate():
-            log.error("BlueskyConnector authentication failed — not starting")
-            return
+        # Attempt initial auth but do NOT abort if it fails — the poll loop
+        # retries authentication on every cycle, so a transient failure at
+        # Space startup (network blip, Bluesky API briefly down) is recovered
+        # automatically on the next poll rather than killing the connector forever.
+        self._authenticate()
 
         self._running = True
         self._thread  = threading.Thread(
@@ -106,6 +108,14 @@ class BlueskyConnector(BaseConnector):
             time.sleep(self.poll_interval)
 
     def _poll_once(self) -> None:
+        # If token is absent (startup auth failed or session was lost),
+        # attempt re-authentication before searching.
+        if not self._access_token:
+            log.info("Bluesky token absent — attempting re-authentication")
+            if not self._authenticate():
+                log.warning("Bluesky re-auth failed — skipping this poll cycle")
+                return
+
         for term in SEARCH_TERMS:
             posts = self._search_posts(term)
             for item in posts:
