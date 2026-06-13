@@ -93,10 +93,24 @@ class YouTubeConnector(BaseConnector):
                     "part":          "id",
                     "maxResults":    10,
                     "order":         "relevance",
-                    "videoEmbeddable": "true",   # embeddable videos more likely to have comments
+                    "videoEmbeddable": "true",
                 },
                 timeout=10,
             )
+
+            if resp.status_code == 403:
+                reason = ""
+                try:
+                    errors = resp.json().get("error", {}).get("errors", [])
+                    reason = errors[0].get("reason", "") if errors else ""
+                except Exception:
+                    pass
+                if reason == "quotaExceeded":
+                    log.warning("YouTube API quota exceeded — skipping remaining searches this cycle")
+                else:
+                    log.warning("YouTube search forbidden for '%s' (403 %s)", query, reason)
+                return []
+
             resp.raise_for_status()
             return [
                 item["id"]["videoId"]

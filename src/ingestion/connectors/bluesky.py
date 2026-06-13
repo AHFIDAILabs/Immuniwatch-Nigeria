@@ -40,9 +40,11 @@ class BlueskyConnector(BaseConnector):
         self._thread: Optional[threading.Thread] = None
         self._dedup        = Deduplicator()
         self._access_token: Optional[str] = None
-        # Cache author DID → raw location string (None = already checked, no location)
-        # Prevents re-fetching the same author profile on every poll cycle
+        # Cache author DID → raw location string (None = already checked, no location).
+        # Capped at 5,000 entries — when full, the oldest half is evicted so the
+        # connector can run indefinitely without growing memory over months/years.
         self._profile_location_cache: dict = {}
+        self._PROFILE_CACHE_MAX = 5000
 
         if not self.handle or not self.app_password:
             log.warning(
@@ -162,6 +164,13 @@ class BlueskyConnector(BaseConnector):
     def _get_author_location(self, author_did: str) -> Optional[str]:
         if author_did in self._profile_location_cache:
             return self._profile_location_cache[author_did]
+
+        # Evict oldest half when cache is full to prevent unbounded memory growth
+        if len(self._profile_location_cache) >= self._PROFILE_CACHE_MAX:
+            evict_keys = list(self._profile_location_cache.keys())[:self._PROFILE_CACHE_MAX // 2]
+            for k in evict_keys:
+                del self._profile_location_cache[k]
+            log.debug("Profile cache evicted %d entries", len(evict_keys))
 
         location = None
         if self._access_token:
