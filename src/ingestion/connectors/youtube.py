@@ -35,7 +35,7 @@ class YouTubeConnector(BaseConnector):
     def __init__(self, on_post: Callable[[RawPost], None]):
         super().__init__(on_post)
         self.api_key       = os.environ.get("YOUTUBE_API_KEY", "")
-        self.poll_interval = int(os.environ.get("YOUTUBE_POLL_INTERVAL", 10800))
+        self.poll_interval = int(os.environ.get("YOUTUBE_POLL_INTERVAL", 8100))
         self._thread: Optional[threading.Thread] = None
         self._dedup        = Deduplicator()
 

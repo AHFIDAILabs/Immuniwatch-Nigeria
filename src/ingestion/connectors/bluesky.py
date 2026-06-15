@@ -36,7 +36,7 @@ class BlueskyConnector(BaseConnector):
         super().__init__(on_post)
         self.handle        = os.environ.get("BLUESKY_HANDLE", "")
         self.app_password  = os.environ.get("BLUESKY_APP_PASSWORD", "")
-        self.poll_interval = int(os.environ.get("BLUESKY_POLL_INTERVAL", 60))
+        self.poll_interval = int(os.environ.get("BLUESKY_POLL_INTERVAL", 30))
         self._thread: Optional[threading.Thread] = None
         self._dedup        = Deduplicator()
         self._access_token: Optional[str] = None
