@@ -76,8 +76,26 @@ def _download_model_files() -> None:
             )
         log.info("Model files ready.")
     except Exception as exc:
-        log.error("Model download failed: %s", exc)
-        log.error("Upload ONNX files to %s on HuggingFace Hub first.", LORA_REPO)
+        log.critical("=" * 60)
+        log.critical("FATAL: Model download failed — Space will not start.")
+        log.critical("Likely cause: HF_TOKEN secret is missing or expired.")
+        log.critical("Fix: Space Settings → Variables and secrets → replace HF_TOKEN.")
+        log.critical("Repo: %s", LORA_REPO)
+        log.critical("Error: %s", exc)
+        log.critical("=" * 60)
+        raise RuntimeError(
+            f"Model download failed from {LORA_REPO}. "
+            f"Check HF_TOKEN in Space secrets. Error: {exc}"
+        ) from exc
+
+    # Verify files actually landed on disk after download
+    still_missing = [fname for fname, path in files if not path.exists()]
+    if still_missing:
+        log.critical("FATAL: Download reported success but files missing: %s", still_missing)
+        raise RuntimeError(
+            f"Model files missing after download: {still_missing}. "
+            f"Check that these files exist in {LORA_REPO}."
+        )
 
 
 # ---------------------------------------------------------------------------

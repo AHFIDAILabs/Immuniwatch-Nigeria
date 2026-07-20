@@ -1,0 +1,27 @@
+name: Keep HuggingFace Space Alive
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # Every 30 minutes, 24/7
+  workflow_dispatch:           # Allow manual trigger from GitHub Actions UI
+
+jobs:
+  ping:
+    name: Ping Space health endpoint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 30 \
+            https://ahfidailabs-immuniwatch-ml-service.hf.space/health)
+          echo "Health check status: $STATUS"
+          if [ "$STATUS" = "200" ]; then
+            echo "Space is running and healthy."
+          elif [ "$STATUS" = "503" ]; then
+            echo "Space is running but model still loading — acceptable."
+          elif [ "$STATUS" = "000" ]; then
+            echo "WARNING: Space did not respond — may be waking from sleep."
+          else
+            echo "WARNING: Unexpected status $STATUS"
+          fi
