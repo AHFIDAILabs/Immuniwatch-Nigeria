@@ -4,6 +4,7 @@ from src.ingestion.deduplication import (
     _shingles,
     JACCARD_THRESHOLD,
     EXACT_TTL_S,
+    LSH_TTL_S,
     NUM_PERMUTATIONS,
     SHINGLE_SIZE,
 )
@@ -19,6 +20,10 @@ def test_jaccard_threshold_matches_system_design():
 
 def test_exact_ttl_is_24_hours():
     assert EXACT_TTL_S == 86400
+
+
+def test_lsh_ttl_matches_exact_ttl():
+    assert LSH_TTL_S == EXACT_TTL_S
 
 
 def test_num_permutations():

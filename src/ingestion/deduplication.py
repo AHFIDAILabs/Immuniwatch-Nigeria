@@ -14,6 +14,7 @@ JACCARD_THRESHOLD = 0.85    # near-duplicate similarity threshold
 NUM_PERMUTATIONS  = 128     # MinHash accuracy vs speed balance
 SHINGLE_SIZE      = 3       # character shingles for MinHash
 EXACT_TTL_S       = 86400   # 24 hours — per system design spec
+LSH_TTL_S         = 86400   # Near-duplicate entries expire after 24h (matches exact TTL)
 
 
 # ---------------------------------------------------------------------------
@@ -52,6 +53,7 @@ class Deduplicator:
         # Layer 2: MinHash LSH (optional — degrades gracefully)
         self._lsh             = None
         self._lsh_available   = False
+        self._lsh_timestamps: dict = {}   # {post_id: inserted_timestamp}
         self._init_lsh()
 
     # ── Initialisation ───────────────────────────────────────────
@@ -118,6 +120,7 @@ class Deduplicator:
         # Insert as new — use post_id as key
         try:
             self._lsh.insert(post_id, minhash)
+            self._lsh_timestamps[post_id] = time.time()
         except ValueError:
             # post_id already in index — harmless
             pass
@@ -131,3 +134,15 @@ class Deduplicator:
             del self._exact[h]
         if expired:
             log.debug("Cleaned up %d expired hashes", len(expired))
+
+        if self._lsh_available:
+            lsh_cutoff = time.time() - LSH_TTL_S
+            expired_lsh = [k for k, ts in self._lsh_timestamps.items() if ts < lsh_cutoff]
+            for key in expired_lsh:
+                try:
+                    self._lsh.remove(key)
+                except Exception:
+                    pass
+                del self._lsh_timestamps[key]
+            if expired_lsh:
+                log.debug("Cleaned up %d expired LSH entries", len(expired_lsh))
