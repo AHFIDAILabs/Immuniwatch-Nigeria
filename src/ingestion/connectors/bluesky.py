@@ -102,34 +102,56 @@ class BlueskyConnector(BaseConnector):
             return False
 
     def _poll_loop(self) -> None:
+        consecutive_failures = 0
         while self._running:
             try:
-                self._poll_once()
+                poll_ok = self._poll_once()
             except Exception as e:
                 log.error("BlueskyConnector poll error: %s", e)
+                poll_ok = False
+
+            if poll_ok:
+                consecutive_failures = 0
+            else:
+                consecutive_failures += 1
+                if consecutive_failures >= 3:
+                    log.warning(
+                        "Bluesky: %d consecutive failed polls — "
+                        "clearing session and backing off 5 minutes",
+                        consecutive_failures,
+                    )
+                    self._access_token = None
+                    consecutive_failures = 0
+                    time.sleep(300)
+                    continue
+
             time.sleep(self.poll_interval)
 
-    def _poll_once(self) -> None:
+    def _poll_once(self) -> bool:
         # If token is absent (startup auth failed or session was lost),
         # attempt re-authentication before searching.
         if not self._access_token:
             log.info("Bluesky token absent — attempting re-authentication")
             if not self._authenticate():
                 log.warning("Bluesky re-auth failed — skipping this poll cycle")
-                return
+                return False
 
+        any_ok = False
         for term in SEARCH_TERMS:
             posts = self._search_posts(term)
-            for item in posts:
-                post = self._to_raw_post(item)
-                if post and not self._dedup.is_duplicate(
-                    post.post_id, post.content_text
-                ):
-                    self._safe_on_post(post)
+            if posts is not None:
+                any_ok = True
+                for item in posts:
+                    post = self._to_raw_post(item)
+                    if post and not self._dedup.is_duplicate(
+                        post.post_id, post.content_text
+                    ):
+                        self._safe_on_post(post)
+        return any_ok
 
-    def _search_posts(self, term: str) -> List[dict]:
+    def _search_posts(self, term: str) -> Optional[List[dict]]:
         if not self._access_token:
-            return []
+            return None
 
         try:
             resp = requests.get(
@@ -139,27 +161,37 @@ class BlueskyConnector(BaseConnector):
                 timeout=10,
             )
 
-            # Re-authenticate if token expired
-            if resp.status_code == 401:
-                log.info("Bluesky token expired — re-authenticating")
+            # Re-authenticate on 401 (expired) or 400 (invalid session).
+            # Log the response body so we can diagnose the exact error.
+            if resp.status_code in (400, 401):
+                log.warning(
+                    "Bluesky %d for '%s' — clearing session and re-authenticating. "
+                    "API response: %s",
+                    resp.status_code, term, resp.text[:300],
+                )
+                self._access_token = None
                 if self._authenticate():
                     resp = requests.get(
                         f"{BSKY_API_BASE}/app.bsky.feed.searchPosts",
-                        headers={
-                            "Authorization": f"Bearer {self._access_token}"
-                        },
+                        headers={"Authorization": f"Bearer {self._access_token}"},
                         params={"q": term, "limit": 25},
                         timeout=10,
                     )
                 else:
-                    return []
+                    return None
 
-            resp.raise_for_status()
+            if not resp.ok:
+                log.warning(
+                    "Bluesky HTTP %d for '%s': %s",
+                    resp.status_code, term, resp.text[:300],
+                )
+                return None
+
             return resp.json().get("posts", [])
 
         except Exception as e:
             log.warning("Bluesky search failed for '%s': %s", term, e)
-            return []
+            return None
 
     def _get_author_location(self, author_did: str) -> Optional[str]:
         if author_did in self._profile_location_cache:
