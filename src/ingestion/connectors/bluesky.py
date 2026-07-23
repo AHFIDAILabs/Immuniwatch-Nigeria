@@ -94,9 +94,17 @@ class BlueskyConnector(BaseConnector):
                 timeout=10,
             )
             resp.raise_for_status()
-            self._access_token = resp.json().get("accessJwt")
-            log.info("BlueskyConnector authenticated as %s", self.handle)
-            return True
+            data = resp.json()
+            self._access_token = data.get("accessJwt")
+            if self._access_token:
+                log.info("BlueskyConnector authenticated as %s", self.handle)
+                return True
+            # Token absent — log available keys to aid diagnosis (no secret values)
+            log.warning(
+                "Bluesky auth succeeded but no accessJwt in response. "
+                "Keys present: %s", list(data.keys())
+            )
+            return False
         except Exception as e:
             log.error("Bluesky authentication failed: %s", e)
             return False
@@ -161,14 +169,9 @@ class BlueskyConnector(BaseConnector):
                 timeout=10,
             )
 
-            # Re-authenticate on 401 (expired) or 400 (invalid session).
-            # Log the response body so we can diagnose the exact error.
-            if resp.status_code in (400, 401):
-                log.warning(
-                    "Bluesky %d for '%s' — clearing session and re-authenticating. "
-                    "API response: %s",
-                    resp.status_code, term, resp.text[:300],
-                )
+            if resp.status_code == 401:
+                # Token expired — re-auth and retry once
+                log.info("Bluesky token expired — re-authenticating")
                 self._access_token = None
                 if self._authenticate():
                     resp = requests.get(
@@ -179,6 +182,21 @@ class BlueskyConnector(BaseConnector):
                     )
                 else:
                     return None
+
+            if resp.status_code == 400:
+                # Auth token rejected — log the exact Bluesky error, then retry
+                # without auth (Bluesky search is publicly accessible).
+                log.warning(
+                    "Bluesky 400 with auth for '%s' — Bluesky says: %s  "
+                    "Retrying without auth token.",
+                    term, resp.text[:400],
+                )
+                self._access_token = None
+                resp = requests.get(
+                    f"{BSKY_API_BASE}/app.bsky.feed.searchPosts",
+                    params={"q": term, "limit": 25},
+                    timeout=10,
+                )
 
             if not resp.ok:
                 log.warning(
