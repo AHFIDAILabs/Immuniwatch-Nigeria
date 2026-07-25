@@ -36,7 +36,7 @@ class BlueskyConnector(BaseConnector):
         super().__init__(on_post)
         self.handle        = os.environ.get("BLUESKY_HANDLE", "")
         self.app_password  = os.environ.get("BLUESKY_APP_PASSWORD", "")
-        self.poll_interval = int(os.environ.get("BLUESKY_POLL_INTERVAL", 30))
+        self.poll_interval = int(os.environ.get("BLUESKY_POLL_INTERVAL", 300))
         self._thread: Optional[threading.Thread] = None
         self._dedup        = Deduplicator()
         self._access_token: Optional[str] = None
@@ -169,31 +169,22 @@ class BlueskyConnector(BaseConnector):
                 timeout=10,
             )
 
-            if resp.status_code == 401:
-                # Token expired — re-auth and retry once
-                log.info("Bluesky token expired — re-authenticating")
-                self._access_token = None
-                if self._authenticate():
-                    resp = requests.get(
-                        f"{BSKY_API_BASE}/app.bsky.feed.searchPosts",
-                        headers={"Authorization": f"Bearer {self._access_token}"},
-                        params={"q": term, "limit": 25},
-                        timeout=10,
-                    )
-                else:
-                    return None
-
-            if resp.status_code == 400:
-                # Auth token rejected — log the exact Bluesky error, then retry
-                # without auth (Bluesky search is publicly accessible).
+            if resp.status_code in (400, 401):
+                # Token rejected or expired — log what Bluesky says, clear session,
+                # re-authenticate, and retry once WITH the fresh token.
+                # (Bluesky now requires auth for search; unauthenticated fallback
+                # no longer works as of mid-2026.)
                 log.warning(
-                    "Bluesky 400 with auth for '%s' — Bluesky says: %s  "
-                    "Retrying without auth token.",
-                    term, resp.text[:400],
+                    "Bluesky %d for '%s' — Bluesky says: %s  Re-authing and retrying.",
+                    resp.status_code, term, resp.text[:400],
                 )
                 self._access_token = None
+                if not self._authenticate():
+                    log.warning("Bluesky re-auth failed — skipping '%s'", term)
+                    return None
                 resp = requests.get(
                     f"{BSKY_API_BASE}/app.bsky.feed.searchPosts",
+                    headers={"Authorization": f"Bearer {self._access_token}"},
                     params={"q": term, "limit": 25},
                     timeout=10,
                 )
