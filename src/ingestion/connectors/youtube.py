@@ -2,7 +2,7 @@ import logging
 import os
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Callable, List, Optional
 
 import requests
@@ -71,13 +71,22 @@ class YouTubeConnector(BaseConnector):
             time.sleep(self.poll_interval)
 
     def _poll_once(self) -> None:
+        # Only process comments published in the last 24 hours so ingestion is
+        # continuous throughout the day rather than a single midnight burst when
+        # the 24h dedup TTL expires.
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
         for query in SEARCH_QUERIES:
             video_ids = self._search_videos(query)
             for video_id in video_ids[:3]:  # top 3 per query — saves quota
                 comments = self._get_comments(video_id)
                 for item in comments:
                     post = self._to_raw_post(item, video_id)
-                    if post and not self._dedup.is_duplicate(
+                    if post is None:
+                        continue
+                    # commentThreads returns newest-first; stop at first old comment
+                    if post.timestamp < cutoff:
+                        break
+                    if not self._dedup.is_duplicate(
                         post.post_id, post.content_text
                     ):
                         self._safe_on_post(post)

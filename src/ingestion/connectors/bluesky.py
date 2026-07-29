@@ -2,7 +2,7 @@ import logging
 import os
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Callable, List, Optional
 
 import requests
@@ -162,10 +162,15 @@ class BlueskyConnector(BaseConnector):
             return None
 
         try:
+            # Limit to posts from the last 60 minutes so each 5-minute poll
+            # captures genuinely new content rather than re-finding old posts.
+            since_str = (
+                datetime.now(timezone.utc) - timedelta(hours=1)
+            ).strftime("%Y-%m-%dT%H:%M:%SZ")
             resp = requests.get(
                 f"{BSKY_API_BASE}/app.bsky.feed.searchPosts",
                 headers={"Authorization": f"Bearer {self._access_token}"},
-                params={"q": term, "limit": 25},
+                params={"q": term, "limit": 25, "since": since_str},
                 timeout=10,
             )
 
@@ -185,7 +190,7 @@ class BlueskyConnector(BaseConnector):
                 resp = requests.get(
                     f"{BSKY_API_BASE}/app.bsky.feed.searchPosts",
                     headers={"Authorization": f"Bearer {self._access_token}"},
-                    params={"q": term, "limit": 25},
+                    params={"q": term, "limit": 25, "since": since_str},
                     timeout=10,
                 )
 
