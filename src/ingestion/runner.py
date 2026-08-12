@@ -73,9 +73,9 @@ def run() -> None:
         _publish_to_kafka(producer, post)
 
     # Import connectors
-    from src.ingestion.connectors.youtube import YouTubeConnector
-    from src.ingestion.connectors.sociavault import SociaVaultConnector
     from src.ingestion.connectors.bluesky import BlueskyConnector
+    from src.ingestion.connectors.sociavault import SociaVaultConnector
+    from src.ingestion.connectors.youtube import YouTubeConnector
 
     connectors = [
         YouTubeConnector(on_post),

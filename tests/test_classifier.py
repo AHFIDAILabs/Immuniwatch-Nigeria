@@ -1,12 +1,11 @@
 from src.models.classifier import (
-    _resolve_state,
-    _resolve_language,
-    is_loaded,
-    LABELS,
     LABEL_TO_ID,
+    LABELS,
     NIGERIAN_STATES,
+    _resolve_language,
+    _resolve_state,
+    is_loaded,
 )
-
 
 # ---------------------------------------------------------------------------
 # is_loaded

@@ -60,10 +60,10 @@ def run() -> None:
     log.info("ML Service: %s", os.environ.get("ML_SERVICE_URL", "http://localhost:7860"))
     log.info("=" * 55)
 
-    from src.ingestion.connectors.bluesky import BlueskyConnector
-    from src.ingestion.connectors.youtube import YouTubeConnector
-    from src.ingestion.connectors.sociavault import SociaVaultConnector
     from src.ingestion.connectors.apify_connector import ApifyConnector
+    from src.ingestion.connectors.bluesky import BlueskyConnector
+    from src.ingestion.connectors.sociavault import SociaVaultConnector
+    from src.ingestion.connectors.youtube import YouTubeConnector
 
     connectors = [
         BlueskyConnector(_classify_direct),
@@ -96,8 +96,8 @@ def run() -> None:
 
 
 if __name__ == "__main__":
-    import sys
     import signal
+    import sys
 
     def _shutdown(signum, frame):
         log.info("Shutting down...")

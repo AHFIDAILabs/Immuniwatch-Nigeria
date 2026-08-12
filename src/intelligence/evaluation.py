@@ -87,7 +87,7 @@ def check_thresholds() -> bool:
 def check_system_design_constants() -> bool:
     passed = True
 
-    from src.ingestion.deduplication import JACCARD_THRESHOLD, EXACT_TTL_S
+    from src.ingestion.deduplication import EXACT_TTL_S, JACCARD_THRESHOLD
     if JACCARD_THRESHOLD != 0.85:
         log.error("  [FAIL] JACCARD_THRESHOLD should be 0.85, got %s", JACCARD_THRESHOLD)
         passed = False
@@ -100,7 +100,7 @@ def check_system_design_constants() -> bool:
     else:
         log.info("  [PASS] Dedup TTL: 24 hours (Section 4.3)")
 
-    from src.intelligence.rag import TOP_K, SIMILARITY_THRESHOLD
+    from src.intelligence.rag import SIMILARITY_THRESHOLD, TOP_K
     if TOP_K != 5:
         log.error("  [FAIL] TOP_K should be 5, got %s", TOP_K)
         passed = False
@@ -113,7 +113,11 @@ def check_system_design_constants() -> bool:
     else:
         log.info("  [PASS] RAG similarity threshold: 0.72 (Section 5.2)")
 
-    from src.intelligence.counter import SHORT_MAX_CHARS, MEDIUM_MAX_WORDS, LONG_MAX_WORDS
+    from src.intelligence.counter import (
+        LONG_MAX_WORDS,
+        MEDIUM_MAX_WORDS,
+        SHORT_MAX_CHARS,
+    )
     if SHORT_MAX_CHARS != 280:
         log.error("  [FAIL] SHORT_MAX_CHARS should be 280, got %s", SHORT_MAX_CHARS)
         passed = False
@@ -140,8 +144,11 @@ def check_system_design_constants() -> bool:
 # ---------------------------------------------------------------------------
 def check_counter_format_compliance() -> bool:
     from src.intelligence.counter import (
-        _enforce_short, _enforce_word_limit,
-        SHORT_MAX_CHARS, MEDIUM_MAX_WORDS, LONG_MAX_WORDS,
+        LONG_MAX_WORDS,
+        MEDIUM_MAX_WORDS,
+        SHORT_MAX_CHARS,
+        _enforce_short,
+        _enforce_word_limit,
     )
 
     passed = True

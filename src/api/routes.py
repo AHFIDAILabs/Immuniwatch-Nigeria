@@ -127,9 +127,9 @@ def _classify_one(req: ClassifyRequest) -> ClassifyResponse:
 
 def _queue_counter_narrative(req: ClassifyRequest, result: dict) -> None:
     try:
+        from src.api.counter_narrative_store import queue_post
         from src.intelligence.counter import generate_counter_response
         from src.intelligence.rag import RAGRetriever
-        from src.api.counter_narrative_store import queue_post
 
         retriever = RAGRetriever()
         evidence  = retriever.retrieve(req.content, language=result.get("language"))
@@ -173,8 +173,9 @@ def _queue_counter_narrative(req: ClassifyRequest, result: dict) -> None:
 
 def health_check() -> dict:
     import time
-    from src.models.classifier import is_loaded
+
     from src.api.main import _start_time
+    from src.models.classifier import is_loaded
 
     if not is_loaded():
         raise HTTPException(
@@ -284,6 +285,7 @@ async def get_batch(job_id: str):
 @router.post("/embed", response_model=EmbedResponse)
 async def embed_single(req: EmbedRequest):
     import time as _time
+
     from src.intelligence.rag import embed_text, is_embedder_ready
 
     if not is_embedder_ready():

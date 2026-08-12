@@ -40,9 +40,9 @@ async def get_by_post_id(post_id: str):
 
 @cn_router.post("/generate")
 async def generate_on_demand(body: GenerateRequest):
+    from src.api.counter_narrative_store import get_by_post_id, queue_post
     from src.intelligence.counter import generate_counter_response
     from src.intelligence.rag import RAGRetriever
-    from src.api.counter_narrative_store import queue_post, get_by_post_id
 
     existing = get_by_post_id(body.post_id)
     if existing and existing.get("generated_short"):
@@ -99,7 +99,9 @@ async def get_history(limit: int = 50):
 @cn_router.post("/{post_id}/deploy")
 async def deploy(post_id: str, body: DeployRequest):
     from src.api.counter_narrative_store import (
-        get_pending, mark_deployed, mark_failed,
+        get_pending,
+        mark_deployed,
+        mark_failed,
     )
     from src.ingestion.replier.registry import get_replier
 

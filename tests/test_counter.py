@@ -1,16 +1,16 @@
 from unittest.mock import patch
+
 from src.intelligence.counter import (
+    LANGUAGE_NAMES,
+    LONG_MAX_WORDS,
+    MEDIUM_MAX_WORDS,
+    SHORT_MAX_CHARS,
     CounterResponse,
     _build_prompt,
     _enforce_short,
     _enforce_word_limit,
     generate_counter_response,
-    SHORT_MAX_CHARS,
-    MEDIUM_MAX_WORDS,
-    LONG_MAX_WORDS,
-    LANGUAGE_NAMES,
 )
-
 
 # ---------------------------------------------------------------------------
 # Configuration constants — system design Section 6.5

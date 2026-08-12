@@ -1,15 +1,15 @@
 import pytest
 from pydantic import ValidationError
+
 from src.api.schemas import (
-    ClassifyRequest,
-    ClassifyResponse,
     Alternative,
     BatchClassifyRequest,
+    ClassifyRequest,
+    ClassifyResponse,
+    EmbedRequest,
     FeedbackRequest,
     RetrainRequest,
-    EmbedRequest,
 )
-
 
 # ---------------------------------------------------------------------------
 # ClassifyRequest

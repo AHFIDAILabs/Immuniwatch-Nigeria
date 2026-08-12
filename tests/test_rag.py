@@ -1,11 +1,10 @@
 from src.intelligence.rag import (
+    EMBEDDING_MODEL,
+    SIMILARITY_THRESHOLD,
+    TOP_K,
     EvidenceRecord,
     RAGRetriever,
-    TOP_K,
-    SIMILARITY_THRESHOLD,
-    EMBEDDING_MODEL,
 )
-
 
 # ---------------------------------------------------------------------------
 # Configuration constants

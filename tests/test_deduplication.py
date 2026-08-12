@@ -1,14 +1,13 @@
 from src.ingestion.deduplication import (
-    Deduplicator,
-    _normalise,
-    _shingles,
-    JACCARD_THRESHOLD,
     EXACT_TTL_S,
+    JACCARD_THRESHOLD,
     LSH_TTL_S,
     NUM_PERMUTATIONS,
     SHINGLE_SIZE,
+    Deduplicator,
+    _normalise,
+    _shingles,
 )
-
 
 # ---------------------------------------------------------------------------
 # Configuration constants
