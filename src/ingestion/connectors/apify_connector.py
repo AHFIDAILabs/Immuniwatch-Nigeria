@@ -175,7 +175,7 @@ class ApifyConnector(BaseConnector):
         url = f"{APIFY_BASE_URL}/{actor_slug}/run-sync-get-dataset-items"
         params = {
             "token":   self._api_key,
-            "timeout": 60,
+            "timeout": 120,
             "memory":  256,
         }
         try:
