@@ -3,7 +3,7 @@ import os
 import threading
 import time
 from datetime import datetime, timezone
-from typing import Callable, List, Optional
+from typing import Callable, Optional
 
 import requests
 from dotenv import load_dotenv
