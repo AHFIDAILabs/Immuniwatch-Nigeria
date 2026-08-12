@@ -63,6 +63,7 @@ def run() -> None:
     from src.ingestion.connectors.bluesky import BlueskyConnector
     from src.ingestion.connectors.youtube import YouTubeConnector
     from src.ingestion.connectors.sociavault import SociaVaultConnector
+    from src.ingestion.connectors.apify_connector import ApifyConnector
 
     connectors = [
         BlueskyConnector(_classify_direct),
@@ -85,6 +86,9 @@ def run() -> None:
         return
 
     log.info("Running connectors: %s", ", ".join(started))
+
+    apify = ApifyConnector(_classify_direct)
+    apify.start()
 
     # Keep thread alive — connectors run in their own threads
     while True:
