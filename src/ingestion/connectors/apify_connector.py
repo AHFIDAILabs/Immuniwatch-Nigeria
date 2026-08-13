@@ -272,12 +272,13 @@ class ApifyConnector(BaseConnector):
     # ── Poll loops ───────────────────────────────────────────────
 
     def _poll_loop_twitter(self) -> None:
-        while self._running:
-            try:
-                self._fetch_twitter()
-            except Exception as exc:
-                log.error("ApifyConnector twitter poll error: %s", exc)
-            time.sleep(self._twitter_interval)
+        """Twitter via Apify disabled — needs cookies.
+        Re-enable when official API or cookies available."""
+        log.info(
+            "ApifyConnector: Twitter polling disabled "
+            "(requires Twitter cookies or paid API). "
+            "Skipping."
+        )
 
     def _poll_loop_instagram(self) -> None:
         while self._running:
@@ -462,68 +463,143 @@ class ApifyConnector(BaseConnector):
             )
             return None
 
-    def _to_raw_post_instagram(self, item: dict) -> Optional[RawPost]:
+    def _to_raw_post_instagram(
+        self, item: dict
+    ) -> Optional[RawPost]:
         try:
             log.info(
                 "ApifyConnector: Instagram item keys: %s",
-                list(item.keys())[:15]
+                list(item.keys())[:20],
             )
-            content = (item.get("caption", "") or "").strip()
-
-            if not content or len(content) < 5:
-                return None
+            post_id = str(
+                item.get("id")
+                or item.get("shortCode")
+                or item.get("url", "")
+            )
+            content = (
+                item.get("caption")
+                or item.get("text")
+                or item.get("alt")
+                or ""
+            )
+            author = (
+                item.get("ownerUsername")
+                or item.get("username")
+                or item.get("owner", {}).get(
+                    "username", ""
+                )
+                or ""
+            )
+            ts_raw = (
+                item.get("timestamp")
+                or item.get("takenAt")
+                or item.get("taken_at")
+                or ""
+            )
+            try:
+                if isinstance(ts_raw, (int, float)):
+                    ts = datetime.fromtimestamp(
+                        ts_raw, tz=timezone.utc
+                    ).replace(tzinfo=None)
+                else:
+                    ts = datetime.fromisoformat(
+                        str(ts_raw).replace("Z", "")
+                    )
+            except Exception:
+                ts = datetime.utcnow()
 
             return RawPost(
-                post_id           = str(item.get("id", "")),
-                platform          = "instagram",
-                content_text      = content,
-                content_type      = "TEXT",
-                author_hash       = hash_author(item.get("ownerUsername", "")),
-                language          = None,
-                timestamp         = self._parse_ts(item.get("timestamp", "")),
-                ingestion_ts      = datetime.now(timezone.utc),
-                raw_url           = item.get("url", ""),
-                location_raw      = item.get("locationName", None) or None,
-                likes             = item.get("likesCount", None),
-                shares            = None,
-                author_handle     = item.get("ownerUsername", ""),
-                original_post_cid = "",
+                post_id=post_id,
+                platform="instagram",
+                content_text=content,
+                content_type="TEXT",
+                author_hash=hash_author(author),
+                language=None,
+                timestamp=ts,
+                ingestion_ts=datetime.utcnow(),
+                raw_url=item.get("url", ""),
+                location_raw=item.get(
+                    "locationName", None
+                ),
+                likes=item.get("likesCount")
+                or item.get("likes"),
+                shares=None,
+                author_handle=author,
+                original_post_cid="",
             )
         except Exception as exc:
             log.warning(
-                "ApifyConnector: failed to parse Instagram item: %s", exc
+                "ApifyConnector: failed to parse "
+                "Instagram item: %s",
+                exc,
             )
             return None
 
-    def _to_raw_post_facebook(self, item: dict) -> Optional[RawPost]:
+    def _to_raw_post_facebook(
+        self, item: dict
+    ) -> Optional[RawPost]:
         try:
             log.info(
                 "ApifyConnector: Facebook item keys: %s",
-                list(item.keys())[:15]
+                list(item.keys())[:20],
             )
-            content = (item.get("text", "") or "").strip()
-
-            if not content or len(content) < 5:
-                return None
+            post_id = str(
+                item.get("postId")
+                or item.get("id")
+                or item.get("url", "")
+            )
+            content = (
+                item.get("text")
+                or item.get("message")
+                or item.get("story")
+                or ""
+            )
+            author = (
+                item.get("profileName")
+                or item.get("pageName")
+                or item.get("authorName")
+                or ""
+            )
+            ts_raw = (
+                item.get("time")
+                or item.get("date")
+                or item.get("createdTime")
+                or ""
+            )
+            try:
+                if isinstance(ts_raw, (int, float)):
+                    ts = datetime.fromtimestamp(
+                        ts_raw, tz=timezone.utc
+                    ).replace(tzinfo=None)
+                else:
+                    ts = datetime.fromisoformat(
+                        str(ts_raw).replace("Z", "")
+                    )
+            except Exception:
+                ts = datetime.utcnow()
 
             return RawPost(
-                post_id           = str(item.get("postId", "")),
-                platform          = "facebook",
-                content_text      = content,
-                content_type      = "TEXT",
-                author_hash       = hash_author(item.get("profileName", "")),
-                language          = None,
-                timestamp         = self._parse_ts(item.get("time", "")),
-                ingestion_ts      = datetime.now(timezone.utc),
-                raw_url           = item.get("url", ""),
-                location_raw      = None,
-                likes             = item.get("likes", None),
-                shares            = None,
-                author_handle     = item.get("profileName", ""),
-                original_post_cid = "",
+                post_id=post_id,
+                platform="facebook",
+                content_text=content,
+                content_type="TEXT",
+                author_hash=hash_author(author),
+                language=None,
+                timestamp=ts,
+                ingestion_ts=datetime.utcnow(),
+                raw_url=item.get("url", ""),
+                location_raw=None,
+                likes=item.get("likes")
+                or item.get("likesCount"),
+                shares=item.get("shares")
+                or item.get("sharesCount"),
+                author_handle=author,
+                original_post_cid="",
             )
         except Exception as exc:
             log.warning(
-                "ApifyConnector: failed to parse Facebook item: %s", exc
+                "ApifyConnector: failed to parse "
+                "Facebook item: %s",
+                exc,
             )
             return None
