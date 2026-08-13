@@ -206,7 +206,7 @@ class ApifyConnector(BaseConnector):
                 )
                 return []
 
-            log.debug(
+            log.info(
                 "ApifyConnector: %s run started id=%s",
                 actor_slug, run_id,
             )
@@ -256,7 +256,7 @@ class ApifyConnector(BaseConnector):
                     "from %s", actor_slug,
                 )
                 return []
-            log.debug(
+            log.info(
                 "ApifyConnector: %s returned %d items",
                 actor_slug, len(data),
             )
@@ -434,8 +434,10 @@ class ApifyConnector(BaseConnector):
                 author_handle     = author.get("userName", ""),
                 original_post_cid = "",
             )
-        except Exception as e:
-            log.error("Failed to parse Apify Twitter post: %s", e)
+        except Exception as exc:
+            log.warning(
+                "ApifyConnector: failed to parse Twitter item: %s", exc
+            )
             return None
 
     def _to_raw_post_instagram(self, item: dict) -> Optional[RawPost]:
@@ -461,8 +463,10 @@ class ApifyConnector(BaseConnector):
                 author_handle     = item.get("ownerUsername", ""),
                 original_post_cid = "",
             )
-        except Exception as e:
-            log.error("Failed to parse Apify Instagram post: %s", e)
+        except Exception as exc:
+            log.warning(
+                "ApifyConnector: failed to parse Instagram item: %s", exc
+            )
             return None
 
     def _to_raw_post_facebook(self, item: dict) -> Optional[RawPost]:
@@ -488,6 +492,8 @@ class ApifyConnector(BaseConnector):
                 author_handle     = item.get("profileName", ""),
                 original_post_cid = "",
             )
-        except Exception as e:
-            log.error("Failed to parse Apify Facebook post: %s", e)
+        except Exception as exc:
+            log.warning(
+                "ApifyConnector: failed to parse Facebook item: %s", exc
+            )
             return None
