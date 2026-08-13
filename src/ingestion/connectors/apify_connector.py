@@ -322,6 +322,12 @@ class ApifyConnector(BaseConnector):
 
         ingested = 0
         for item in items:
+            if not item or "noResults" in item or "error" in item:
+                log.debug(
+                    "ApifyConnector: skipping Twitter non-post item: %s",
+                    list(item.keys()) if item else "empty",
+                )
+                continue
             post = self._to_raw_post_twitter(item)
             if post and not self._dedup.is_duplicate(post.post_id, post.content_text):
                 self._safe_on_post(post)
@@ -354,6 +360,12 @@ class ApifyConnector(BaseConnector):
 
         ingested = 0
         for item in items:
+            if not item or "error" in item or "errorDescription" in item:
+                log.debug(
+                    "ApifyConnector: skipping Instagram non-post item: %s",
+                    list(item.keys()) if item else "empty",
+                )
+                continue
             post = self._to_raw_post_instagram(item)
             if post and not self._dedup.is_duplicate(post.post_id, post.content_text):
                 self._safe_on_post(post)
@@ -391,6 +403,12 @@ class ApifyConnector(BaseConnector):
 
         ingested = 0
         for item in items:
+            if not item or "error" in item:
+                log.debug(
+                    "ApifyConnector: skipping Facebook non-post item: %s",
+                    list(item.keys()) if item else "empty",
+                )
+                continue
             post = self._to_raw_post_facebook(item)
             if post and not self._dedup.is_duplicate(post.post_id, post.content_text):
                 self._safe_on_post(post)
