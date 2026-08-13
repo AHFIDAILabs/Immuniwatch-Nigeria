@@ -351,9 +351,10 @@ class ApifyConnector(BaseConnector):
         payload = {
             "hashtags":     [tag],
             "resultsLimit": BATCH_INSTAGRAM,
-            "searchType":   "hashtag",
         }
-        items = self._call_apify("apify~instagram-scraper", payload)
+        items = self._call_apify(
+            "apidojo~instagram-hashtag-scraper", payload
+        )
 
         ingested = 0
         for item in items:
