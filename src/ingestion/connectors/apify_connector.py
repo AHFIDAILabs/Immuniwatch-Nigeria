@@ -34,7 +34,7 @@ BATCH_FACEBOOK  = 10
 # Poll intervals in seconds
 INTERVAL_TWITTER   = 21600   # 6 hours
 INTERVAL_INSTAGRAM = 28800   # 8 hours
-INTERVAL_FACEBOOK  = 86400   # 24 hours — once per day to save budget
+INTERVAL_FACEBOOK  = 172800  # 48 hours — 15 runs/month within $5 budget
 
 # Search terms — rotate one per poll, do not fire all terms in a
 # single poll (saves budget).
@@ -47,9 +47,9 @@ TWITTER_TERMS = [
 ]
 
 INSTAGRAM_HASHTAGS = [
-    "vaccineNigeria",
+    "Nigeria",
     "NigeriaHealth",
-    "NigeriaVaccine",
+    "vaccination",
 ]
 
 FACEBOOK_QUERY = "vaccine Nigeria"
