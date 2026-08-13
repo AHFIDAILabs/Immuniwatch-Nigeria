@@ -386,17 +386,12 @@ class ApifyConnector(BaseConnector):
         log.debug("ApifyConnector: fetching Facebook query='%s'", FACEBOOK_QUERY)
 
         payload = {
-            "startUrls": [
-                {
-                    "url": (
-                        "https://www.facebook.com/search/posts/"
-                        "?q=vaccine+Nigeria"
-                    )
-                }
-            ],
-            "maxPosts": BATCH_FACEBOOK,
+            "query":      FACEBOOK_QUERY,
+            "maxResults": BATCH_FACEBOOK,
         }
-        items = self._call_apify("apify~facebook-posts-scraper", payload)
+        items = self._call_apify(
+            "powerai~facebook-post-search-scraper", payload
+        )
 
         ingested = 0
         for item in items:
