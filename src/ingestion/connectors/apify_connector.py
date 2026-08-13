@@ -349,11 +349,12 @@ class ApifyConnector(BaseConnector):
         log.debug("ApifyConnector: fetching Instagram hashtag='%s'", tag)
 
         payload = {
-            "hashtags":     [tag],
-            "resultsLimit": BATCH_INSTAGRAM,
+            "hashtags":            [tag],
+            "maxPostsPerHashtag":  BATCH_INSTAGRAM,
         }
         items = self._call_apify(
-            "apidojo~instagram-hashtag-scraper", payload
+            "scraping_solutions~instagram-hashtag-scraper-pro-no-cookies",
+            payload,
         )
 
         ingested = 0
@@ -463,35 +464,22 @@ class ApifyConnector(BaseConnector):
         self, item: dict
     ) -> Optional[RawPost]:
         try:
-            log.info(
-                "ApifyConnector: Instagram item keys: %s",
-                list(item.keys())[:20],
-            )
             post_id = str(
-                item.get("id")
-                or item.get("shortCode")
-                or item.get("url", "")
+                item.get("raw_post_id")
+                or item.get("code")
+                or item.get("link_post", "")
             )
             content = (
-                item.get("caption")
-                or item.get("text")
-                or item.get("alt")
+                item.get("caption.text")
+                or item.get("caption", "")
                 or ""
             )
             author = (
-                item.get("ownerUsername")
-                or item.get("username")
-                or item.get("owner", {}).get(
-                    "username", ""
-                )
+                item.get("user.username")
+                or item.get("user.full_name")
                 or ""
             )
-            ts_raw = (
-                item.get("timestamp")
-                or item.get("takenAt")
-                or item.get("taken_at")
-                or ""
-            )
+            ts_raw = item.get("taken_at_date", "")
             try:
                 if isinstance(ts_raw, (int, float)):
                     ts = datetime.fromtimestamp(
@@ -513,12 +501,9 @@ class ApifyConnector(BaseConnector):
                 language=None,
                 timestamp=ts,
                 ingestion_ts=datetime.utcnow(),
-                raw_url=item.get("url", ""),
-                location_raw=item.get(
-                    "locationName", None
-                ),
-                likes=item.get("likesCount")
-                or item.get("likes"),
+                raw_url=item.get("link_post", ""),
+                location_raw=None,
+                likes=item.get("like_count"),
                 shares=None,
                 author_handle=author,
                 original_post_cid="",
@@ -526,8 +511,7 @@ class ApifyConnector(BaseConnector):
         except Exception as exc:
             log.warning(
                 "ApifyConnector: failed to parse "
-                "Instagram item: %s",
-                exc,
+                "Instagram item: %s", exc,
             )
             return None
 
