@@ -475,11 +475,14 @@ class ApifyConnector(BaseConnector):
                 item.get("raw_post_id")
                 or item.get("code")
                 or item.get("link_post", "")
+                or item.get("link_user", "")
             )
             content = (
                 item.get("caption.text")
+                or item.get("caption.hashtags")
                 or item.get("caption", "")
-                or ""
+                or item.get("hashtag", "")
+                or "Instagram post"
             )
             author = (
                 item.get("user.username")
