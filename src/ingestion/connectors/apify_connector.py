@@ -412,6 +412,10 @@ class ApifyConnector(BaseConnector):
 
     def _to_raw_post_twitter(self, item: dict) -> Optional[RawPost]:
         try:
+            log.info(
+                "ApifyConnector: Twitter item keys: %s",
+                list(item.keys())[:15]
+            )
             author  = item.get("author", {})
             content = (item.get("full_text") or item.get("text", "")).strip()
 
@@ -442,6 +446,10 @@ class ApifyConnector(BaseConnector):
 
     def _to_raw_post_instagram(self, item: dict) -> Optional[RawPost]:
         try:
+            log.info(
+                "ApifyConnector: Instagram item keys: %s",
+                list(item.keys())[:15]
+            )
             content = (item.get("caption", "") or "").strip()
 
             if not content or len(content) < 5:
@@ -471,6 +479,10 @@ class ApifyConnector(BaseConnector):
 
     def _to_raw_post_facebook(self, item: dict) -> Optional[RawPost]:
         try:
+            log.info(
+                "ApifyConnector: Facebook item keys: %s",
+                list(item.keys())[:15]
+            )
             content = (item.get("text", "") or "").strip()
 
             if not content or len(content) < 5:
