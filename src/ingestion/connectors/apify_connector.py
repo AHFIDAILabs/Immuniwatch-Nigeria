@@ -172,30 +172,103 @@ class ApifyConnector(BaseConnector):
         return term
 
     def _call_apify(self, actor_slug: str, payload: dict) -> list:
-        url = f"{APIFY_BASE_URL}/{actor_slug}/run-sync-get-dataset-items"
-        params = {
-            "token":   self._api_key,
-            "timeout": 120,
-            "memory":  256,
-        }
+        """Start an Apify actor run async, poll until done, return items."""
+        if not APIFY_BACKEND:
+            raise NotImplementedError("APIFY_BACKEND is False")
+
+        run_url = (
+            f"{APIFY_BASE_URL}/{actor_slug}/runs"
+            f"?token={self._api_key}"
+        )
         try:
-            resp = requests.post(url, params=params, json=payload, timeout=90)
-            if resp.status_code != 200:
+            # Start the run (returns immediately with run ID)
+            resp = requests.post(
+                run_url,
+                json=payload,
+                timeout=30,
+            )
+            if resp.status_code not in (200, 201):
                 log.warning(
-                    "ApifyConnector: %s returned HTTP %d",
+                    "ApifyConnector: %s start failed HTTP %d",
                     actor_slug, resp.status_code,
                 )
                 return []
-            data = resp.json()
-            if not isinstance(data, list):
+
+            run_data = resp.json()
+            run_id = (
+                run_data.get("data", {}).get("id")
+                or run_data.get("id")
+            )
+            if not run_id:
                 log.warning(
-                    "ApifyConnector: unexpected response format from %s",
+                    "ApifyConnector: no run ID from %s",
                     actor_slug,
                 )
                 return []
+
+            log.debug(
+                "ApifyConnector: %s run started id=%s",
+                actor_slug, run_id,
+            )
+
+            # Poll until SUCCEEDED or FAILED (max 5 minutes)
+            status_url = (
+                f"https://api.apify.com/v2/acts/"
+                f"{actor_slug}/runs/{run_id}"
+                f"?token={self._api_key}"
+            )
+            for _ in range(30):  # 30 x 10s = 5 minutes max
+                time.sleep(10)
+                try:
+                    sr = requests.get(status_url, timeout=15)
+                    status = (
+                        sr.json()
+                        .get("data", {})
+                        .get("status", "")
+                    )
+                except Exception:
+                    continue
+                if status == "SUCCEEDED":
+                    break
+                if status in ("FAILED", "ABORTED", "TIMED-OUT"):
+                    log.warning(
+                        "ApifyConnector: %s run %s status=%s",
+                        actor_slug, run_id, status,
+                    )
+                    return []
+
+            # Fetch dataset items
+            items_url = (
+                f"https://api.apify.com/v2/acts/"
+                f"{actor_slug}/runs/{run_id}"
+                f"/dataset/items"
+                f"?token={self._api_key}&format=json"
+            )
+            ir = requests.get(items_url, timeout=30)
+            if ir.status_code != 200:
+                log.warning(
+                    "ApifyConnector: dataset fetch failed HTTP %d",
+                    ir.status_code,
+                )
+                return []
+            data = ir.json()
+            if not isinstance(data, list):
+                log.warning(
+                    "ApifyConnector: unexpected dataset format "
+                    "from %s", actor_slug,
+                )
+                return []
+            log.debug(
+                "ApifyConnector: %s returned %d items",
+                actor_slug, len(data),
+            )
             return data
+
         except Exception as exc:
-            log.error("ApifyConnector: error calling %s: %s", actor_slug, exc)
+            log.error(
+                "ApifyConnector: error calling %s: %s",
+                actor_slug, exc,
+            )
             return []
 
     # ── Poll loops ───────────────────────────────────────────────
@@ -302,7 +375,14 @@ class ApifyConnector(BaseConnector):
         log.debug("ApifyConnector: fetching Facebook query='%s'", FACEBOOK_QUERY)
 
         payload = {
-            "search":   FACEBOOK_QUERY,
+            "startUrls": [
+                {
+                    "url": (
+                        "https://www.facebook.com/search/posts/"
+                        "?q=vaccine+Nigeria"
+                    )
+                }
+            ],
             "maxPosts": BATCH_FACEBOOK,
         }
         items = self._call_apify("apify~facebook-posts-scraper", payload)
