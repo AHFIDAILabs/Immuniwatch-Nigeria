@@ -464,6 +464,13 @@ class ApifyConnector(BaseConnector):
         self, item: dict
     ) -> Optional[RawPost]:
         try:
+            log.info(
+                "ApifyConnector: IG raw item sample: %s",
+                {k: v for k, v in item.items()
+                 if k in ["raw_post_id", "caption.text",
+                           "taken_at_date", "user.full_name",
+                           "user.username", "link_post"]},
+            )
             post_id = str(
                 item.get("raw_post_id")
                 or item.get("code")
