@@ -39,11 +39,11 @@ INTERVAL_FACEBOOK  = 43200   # 12 hours
 # Search terms — rotate one per poll, do not fire all terms in a
 # single poll (saves budget).
 TWITTER_TERMS = [
-    "#VaccineNigeria",
-    "#NigeriaHealth vaccine",
-    "NPHCDA vaccination",
-    "COVID vaccine Nigeria 2026",
+    "vaccine Nigeria",
+    "vaccination Nigeria",
+    "NPHCDA",
     "polio vaccine Nigeria",
+    "immunization Nigeria",
 ]
 
 INSTAGRAM_HASHTAGS = [
@@ -312,11 +312,7 @@ class ApifyConnector(BaseConnector):
         payload = {
             "searchTerms": [term],
             "maxItems":    BATCH_TWITTER,
-            "queryType":   "Latest",
-            "lang":        "en",
-            "since":       "",
-            "until":       "",
-            "geocode":     "",
+            "sort":        "Latest",
         }
         items = self._call_apify("apidojo~tweet-scraper", payload)
 
