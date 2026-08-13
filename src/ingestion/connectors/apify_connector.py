@@ -213,8 +213,7 @@ class ApifyConnector(BaseConnector):
 
             # Poll until SUCCEEDED or FAILED (max 5 minutes)
             status_url = (
-                f"https://api.apify.com/v2/acts/"
-                f"{actor_slug}/runs/{run_id}"
+                f"https://api.apify.com/v2/actor-runs/{run_id}"
                 f"?token={self._api_key}"
             )
             for _ in range(30):  # 30 x 10s = 5 minutes max
@@ -239,8 +238,7 @@ class ApifyConnector(BaseConnector):
 
             # Fetch dataset items
             items_url = (
-                f"https://api.apify.com/v2/acts/"
-                f"{actor_slug}/runs/{run_id}"
+                f"https://api.apify.com/v2/actor-runs/{run_id}"
                 f"/dataset/items"
                 f"?token={self._api_key}&format=json"
             )
