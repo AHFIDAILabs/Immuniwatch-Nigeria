@@ -34,7 +34,7 @@ BATCH_FACEBOOK  = 10
 # Poll intervals in seconds
 INTERVAL_TWITTER   = 21600   # 6 hours
 INTERVAL_INSTAGRAM = 28800   # 8 hours
-INTERVAL_FACEBOOK  = 43200   # 12 hours
+INTERVAL_FACEBOOK  = 86400   # 24 hours — once per day to save budget
 
 # Search terms — rotate one per poll, do not fire all terms in a
 # single poll (saves budget).
