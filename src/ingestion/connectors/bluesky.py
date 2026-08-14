@@ -17,6 +17,8 @@ log = logging.getLogger(__name__)
 
 BSKY_API_BASE = "https://bsky.social/xrpc"
 
+_ALLOWED_LANGUAGES = {"en", "ha", "yo", "ig", "pcm"}
+
 # Vaccine search terms — covers all 5 languages
 SEARCH_TERMS = [
     "vaccine Nigeria",
@@ -154,6 +156,9 @@ class BlueskyConnector(BaseConnector):
                     if post and not self._dedup.is_duplicate(
                         post.post_id, post.content_text
                     ):
+                        if post.language is not None \
+                                and post.language not in _ALLOWED_LANGUAGES:
+                            continue
                         self._safe_on_post(post)
         return any_ok
 
