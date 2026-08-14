@@ -171,6 +171,21 @@ class ApifyConnector(BaseConnector):
             self._term_index[platform] = idx + 1
         return term
 
+    ALLOWED_LANGUAGES = {
+        "en",   # English
+        "ha",   # Hausa
+        "yo",   # Yoruba
+        "ig",   # Igbo
+        "pcm",  # Nigerian Pidgin
+    }
+
+    def _is_allowed_language(
+        self, language: str | None
+    ) -> bool:
+        if language is None:
+            return True
+        return language in self.ALLOWED_LANGUAGES
+
     def _call_apify(self, actor_slug: str, payload: dict) -> list:
         """Start an Apify actor run async, poll until done, return items."""
         if not APIFY_BACKEND:
@@ -379,9 +394,16 @@ class ApifyConnector(BaseConnector):
                 post.post_id, is_dup,
                 post.content_text[:50]
             )
-            if not is_dup:
+            if not is_dup and self._is_allowed_language(
+                    post.language):
                 self._safe_on_post(post)
                 ingested += 1
+            elif not is_dup:
+                log.debug(
+                    "ApifyConnector: skipping Instagram "
+                    "post — language rejected: %s",
+                    post.language,
+                )
 
         if ingested:
             log.info(
@@ -417,9 +439,20 @@ class ApifyConnector(BaseConnector):
                 )
                 continue
             post = self._to_raw_post_facebook(item)
-            if post and not self._dedup.is_duplicate(post.post_id, post.content_text):
+            if post is None:
+                continue
+            is_dup = self._dedup.is_duplicate(
+                post.post_id, post.content_text)
+            if not is_dup and self._is_allowed_language(
+                    post.language):
                 self._safe_on_post(post)
                 ingested += 1
+            elif not is_dup:
+                log.debug(
+                    "ApifyConnector: skipping Facebook "
+                    "post — language rejected: %s",
+                    post.language,
+                )
 
         if ingested:
             log.info(
