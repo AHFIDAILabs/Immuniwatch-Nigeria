@@ -366,7 +366,20 @@ class ApifyConnector(BaseConnector):
                 )
                 continue
             post = self._to_raw_post_instagram(item)
-            if post and not self._dedup.is_duplicate(post.post_id, post.content_text):
+            if post is None:
+                log.warning(
+                    "ApifyConnector: Instagram parse returned None"
+                )
+                continue
+            is_dup = self._dedup.is_duplicate(
+                post.post_id, post.content_text)
+            log.info(
+                "ApifyConnector: Instagram post %s | "
+                "dup=%s | content=%s",
+                post.post_id, is_dup,
+                post.content_text[:50]
+            )
+            if not is_dup:
                 self._safe_on_post(post)
                 ingested += 1
 
