@@ -33,7 +33,7 @@ BATCH_FACEBOOK  = 10
 
 # Poll intervals in seconds
 INTERVAL_TWITTER   = 21600   # 6 hours
-INTERVAL_INSTAGRAM = 28800   # 8 hours
+INTERVAL_INSTAGRAM = 43200   # 12 hours — 2 polls/day, ~$1.80/month
 INTERVAL_FACEBOOK  = 172800  # 48 hours — 15 runs/month within $5 budget
 
 # Search terms — rotate one per poll, do not fire all terms in a
