@@ -33,7 +33,7 @@ BATCH_FACEBOOK  = 10
 
 # Poll intervals in seconds
 INTERVAL_TWITTER   = 21600   # 6 hours
-INTERVAL_INSTAGRAM = 86400   # 24 hours
+INTERVAL_INSTAGRAM = 43200  # 12 hours
 INTERVAL_FACEBOOK  = 259200  # 72 hours
 
 # Search terms — rotate one per poll, do not fire all terms in a
@@ -304,12 +304,12 @@ class ApifyConnector(BaseConnector):
             time.sleep(self._instagram_interval)
 
     def _poll_loop_facebook(self) -> None:
-        while self._running:
-            try:
-                self._fetch_facebook()
-            except Exception as exc:
-                log.error("ApifyConnector facebook poll error: %s", exc)
-            time.sleep(self._facebook_interval)
+        log.info(
+            "ApifyConnector: Facebook paused until "
+            "Sep 11 budget refresh. "
+            "Will resume automatically next month."
+        )
+        return
 
     # ── Fetch methods ────────────────────────────────────────────
 
