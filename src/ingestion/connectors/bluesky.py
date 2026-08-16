@@ -42,6 +42,7 @@ class BlueskyConnector(BaseConnector):
         self._thread: Optional[threading.Thread] = None
         self._dedup        = Deduplicator()
         self._access_token: Optional[str] = None
+        self._token_acquired_at: float = 0.0
         # Cache author DID → raw location string (None = already checked, no location).
         # Capped at 5,000 entries — when full, the oldest half is evicted so the
         # connector can run indefinitely without growing memory over months/years.
@@ -99,6 +100,7 @@ class BlueskyConnector(BaseConnector):
             data = resp.json()
             self._access_token = data.get("accessJwt")
             if self._access_token:
+                self._token_acquired_at = time.time()
                 log.info("BlueskyConnector authenticated as %s", self.handle)
                 return True
             # Token absent — log available keys to aid diagnosis (no secret values)
@@ -138,6 +140,13 @@ class BlueskyConnector(BaseConnector):
             time.sleep(self.poll_interval)
 
     def _poll_once(self) -> bool:
+        # Proactively refresh token every 90 min
+        if (self._access_token and
+                time.time() - self._token_acquired_at > 5400):
+            log.info("BlueskyConnector: proactive token refresh")
+            self._access_token = None
+            self._token_acquired_at = 0.0
+
         # If token is absent (startup auth failed or session was lost),
         # attempt re-authentication before searching.
         if not self._access_token:
