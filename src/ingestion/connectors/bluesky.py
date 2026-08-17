@@ -168,7 +168,19 @@ class BlueskyConnector(BaseConnector):
                         if post.language is not None \
                                 and post.language not in _ALLOWED_LANGUAGES:
                             continue
+                        log.info(
+                            "BlueskyConnector: emitting post "
+                            "%s lang=%s text=%s",
+                            post.post_id,
+                            post.language,
+                            post.content_text[:50],
+                        )
                         self._safe_on_post(post)
+                    else:
+                        log.debug(
+                            "BlueskyConnector: duplicate "
+                            "skipped %s", post.post_id
+                        )
         return any_ok
 
     def _search_posts(self, term: str) -> Optional[List[dict]]:
