@@ -14,6 +14,10 @@ RETRY_DELAY_S = 2
 
 
 def _classify_direct(post) -> None:
+    log.info(
+        "classify_direct called: platform=%s post_id=%s",
+        post.platform, post.post_id
+    )
     ml_url  = os.environ.get("ML_SERVICE_URL", "http://localhost:7860")
     api_key = os.environ.get("API_KEY", "")
 
