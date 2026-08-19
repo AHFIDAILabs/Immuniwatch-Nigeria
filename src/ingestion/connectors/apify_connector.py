@@ -180,11 +180,21 @@ class ApifyConnector(BaseConnector):
     }
 
     def _is_allowed_language(
-        self, language: str | None
+        self, content: str, language: str | None
     ) -> bool:
-        if language is None:
-            return True
-        return language in self.ALLOWED_LANGUAGES
+        if language and language not in self.ALLOWED_LANGUAGES:
+            return False
+        # Reject posts with non-Latin scripts
+        # (Devanagari, Chinese, Korean, Arabic etc.)
+        import unicodedata
+        non_latin = sum(
+            1 for c in content
+            if unicodedata.category(c) in ('Lo',)
+            and ord(c) > 0x024F
+        )
+        if non_latin > 10:
+            return False
+        return True
 
     def _call_apify(self, actor_slug: str, payload: dict) -> list:
         """Start an Apify actor run async, poll until done, return items."""
@@ -395,7 +405,7 @@ class ApifyConnector(BaseConnector):
                 post.content_text[:50]
             )
             if not is_dup and self._is_allowed_language(
-                    post.language):
+                    post.content_text, post.language):
                 self._safe_on_post(post)
                 ingested += 1
             elif not is_dup:
@@ -444,7 +454,7 @@ class ApifyConnector(BaseConnector):
             is_dup = self._dedup.is_duplicate(
                 post.post_id, post.content_text)
             if not is_dup and self._is_allowed_language(
-                    post.language):
+                    post.content_text, post.language):
                 self._safe_on_post(post)
                 ingested += 1
             elif not is_dup:
