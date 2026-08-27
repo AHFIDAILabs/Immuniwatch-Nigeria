@@ -297,13 +297,15 @@ class ApifyConnector(BaseConnector):
     # ── Poll loops ───────────────────────────────────────────────
 
     def _poll_loop_twitter(self) -> None:
-        """Twitter via Apify disabled — needs cookies.
-        Re-enable when official API or cookies available."""
-        log.info(
-            "ApifyConnector: Twitter polling disabled "
-            "(requires Twitter cookies or paid API). "
-            "Skipping."
-        )
+        while self._running:
+            try:
+                self._fetch_twitter()
+            except Exception as exc:
+                log.error(
+                    "ApifyConnector twitter poll error: %s",
+                    exc,
+                )
+            time.sleep(self._twitter_interval)
 
     def _poll_loop_instagram(self) -> None:
         while self._running:
@@ -335,11 +337,16 @@ class ApifyConnector(BaseConnector):
         term = self._next_term("twitter", TWITTER_TERMS)
         log.debug("ApifyConnector: fetching Twitter term='%s'", term)
 
+        cookie = os.environ.get(
+            "TWITTER_COOKIE_AUTH_TOKEN", ""
+        )
         payload = {
             "searchTerms": [term],
             "maxItems":    BATCH_TWITTER,
             "sort":        "Latest",
         }
+        if cookie:
+            payload["cookie"] = cookie
         items = self._call_apify("apidojo~tweet-scraper", payload)
 
         ingested = 0
