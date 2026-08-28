@@ -19,9 +19,14 @@ def post_twitter_reply(reply_text: str, tweet_id: str) -> dict:
             "TWITTER_COOKIE_CT0 in HuggingFace Space secrets."
         )
 
-    if not tweet_id or not str(tweet_id).strip().isdigit():
+    # Extract numeric ID from full URL if needed
+    # e.g. https://twitter.com/user/status/1234567890
+    tweet_id = str(tweet_id).strip()
+    if "/" in tweet_id:
+        tweet_id = tweet_id.rstrip("/").split("/")[-1]
+    if not tweet_id.isdigit():
         raise ValueError(
-            f"tweet_id must be a numeric string, got: {tweet_id!r}"
+            f"tweet_id must be numeric, got: {tweet_id!r}"
         )
 
     from twitter.account import Account
