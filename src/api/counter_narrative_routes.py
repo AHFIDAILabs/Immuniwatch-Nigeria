@@ -114,6 +114,33 @@ async def deploy(post_id: str, body: DeployRequest):
         raise HTTPException(status_code=422, detail="approved_text is too short")
 
     platform = record["platform"]
+
+    # Twitter counter-response dispatch — runs before replier check
+    if platform == "twitter":
+        try:
+            from twitter_dispatcher import post_twitter_reply
+            _external_id = (
+                record.get("original_post_uri")
+                or record.get("post_id")
+            )
+            if _external_id:
+                post_twitter_reply(
+                    body.approved_text.strip(),
+                    str(_external_id),
+                )
+                log.info(
+                    "Twitter reply dispatched for post %s",
+                    post_id,
+                )
+                mark_deployed(post_id, reply_uri=None, manual_url=None)
+                return {
+                    "status":   "deployed",
+                    "post_id":  post_id,
+                    "platform": platform,
+                }
+        except Exception as _e:
+            log.error("Twitter dispatch failed: %s", _e)
+
     replier  = get_replier(platform)
 
     if replier is None:
@@ -125,25 +152,6 @@ async def deploy(post_id: str, body: DeployRequest):
         author_handle=     record["author_handle"],
         text=              body.approved_text.strip(),
     )
-
-    # Twitter counter-response dispatch
-    try:
-        from twitter_dispatcher import post_twitter_reply
-        _external_id = (
-            record.get("original_post_uri")
-            or record.get("post_id")
-        )
-        if platform == "twitter" and _external_id:
-            post_twitter_reply(
-                body.approved_text.strip(),
-                str(_external_id),
-            )
-            log.info(
-                "Twitter reply dispatched for post %s",
-                post_id,
-            )
-    except Exception as _e:
-        log.error("Twitter dispatch failed: %s", _e)
 
     if result.success and not result.error:
         mark_deployed(post_id, reply_uri=result.reply_uri, manual_url=result.manual_url)
