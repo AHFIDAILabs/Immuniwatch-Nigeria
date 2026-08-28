@@ -32,10 +32,13 @@ PAGES_TO_MONITOR = [
     "NaijaHealthTalk",
     "healthtalknaija",
     "VaccineChoiceNG",
+    "NigeriaHealthWatch",
+    "naijahealthfacts",
+    "VaxTruthNigeria",
 ]
 
 # Posts to fetch per page per poll
-POSTS_PER_PAGE = 10
+POSTS_PER_PAGE = 25
 
 _ALLOWED_LANGUAGES = {"en", "ha", "yo", "ig", "pcm"}
 

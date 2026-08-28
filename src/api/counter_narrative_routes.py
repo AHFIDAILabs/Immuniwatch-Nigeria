@@ -126,6 +126,25 @@ async def deploy(post_id: str, body: DeployRequest):
         text=              body.approved_text.strip(),
     )
 
+    # Twitter counter-response dispatch
+    try:
+        from twitter_dispatcher import post_twitter_reply
+        _external_id = (
+            record.get("original_post_uri")
+            or record.get("post_id")
+        )
+        if platform == "twitter" and _external_id:
+            post_twitter_reply(
+                body.approved_text.strip(),
+                str(_external_id),
+            )
+            log.info(
+                "Twitter reply dispatched for post %s",
+                post_id,
+            )
+    except Exception as _e:
+        log.error("Twitter dispatch failed: %s", _e)
+
     if result.success and not result.error:
         mark_deployed(post_id, reply_uri=result.reply_uri, manual_url=result.manual_url)
         return {
