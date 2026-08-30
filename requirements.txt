@@ -39,6 +39,3 @@ pytest-asyncio>=0.23.0
 
 # Twitter reply dispatch
 twitter-api-client
-
-# Facebook cookie-based scraping
-facebook-scraper

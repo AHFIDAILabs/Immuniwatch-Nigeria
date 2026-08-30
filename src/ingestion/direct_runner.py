@@ -66,7 +66,6 @@ def run() -> None:
 
     from src.ingestion.connectors.apify_connector import ApifyConnector
     from src.ingestion.connectors.bluesky import BlueskyConnector
-    from src.ingestion.connectors.facebook_cookie_connector import FacebookCookieConnector
     from src.ingestion.connectors.sociavault import SociaVaultConnector
     from src.ingestion.connectors.youtube import YouTubeConnector
 
@@ -94,9 +93,6 @@ def run() -> None:
 
     apify = ApifyConnector(_classify_direct)
     apify.start()
-
-    fb_cookie = FacebookCookieConnector(_classify_direct)
-    fb_cookie.start()
 
     # Keep thread alive — connectors run in their own threads
     while True:
