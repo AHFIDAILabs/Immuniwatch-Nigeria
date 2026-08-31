@@ -40,6 +40,7 @@ class YouTubeConnector(BaseConnector):
         self.poll_interval = int(os.environ.get("YOUTUBE_POLL_INTERVAL", 8100))
         self._thread: Optional[threading.Thread] = None
         self._dedup        = Deduplicator()
+        self._quota_exceeded_until: float = 0.0
 
         if not self.api_key:
             log.warning("YOUTUBE_API_KEY not set — connector will not start")
@@ -73,6 +74,13 @@ class YouTubeConnector(BaseConnector):
             time.sleep(self.poll_interval)
 
     def _poll_once(self) -> None:
+        if time.time() < self._quota_exceeded_until:
+            log.debug(
+                "YouTubeConnector: quota backoff active, "
+                "skipping poll"
+            )
+            return
+
         # Only process comments published in the last 24 hours so ingestion is
         # continuous throughout the day rather than a single midnight burst when
         # the 24h dedup TTL expires.
@@ -120,7 +128,13 @@ class YouTubeConnector(BaseConnector):
                 except Exception:
                     pass
                 if reason == "quotaExceeded":
-                    log.warning("YouTube API quota exceeded — skipping remaining searches this cycle")
+                    log.warning(
+                        "YouTubeConnector: quota exceeded — "
+                        "backing off for 6 hours"
+                    )
+                    self._quota_exceeded_until = (
+                        time.time() + 21600
+                    )
                 else:
                     log.warning("YouTube search forbidden for '%s' (403 %s)", query, reason)
                 return []
