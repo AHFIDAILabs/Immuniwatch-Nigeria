@@ -67,6 +67,9 @@ def run() -> None:
     from src.ingestion.connectors.apify_connector import ApifyConnector
     from src.ingestion.connectors.bluesky import BlueskyConnector
     from src.ingestion.connectors.sociavault import SociaVaultConnector
+    from src.ingestion.connectors.twitter_cookie_connector import (
+        TwitterCookieConnector,
+    )
     from src.ingestion.connectors.youtube import YouTubeConnector
 
     connectors = [
@@ -93,6 +96,9 @@ def run() -> None:
 
     apify = ApifyConnector(_classify_direct)
     apify.start()
+
+    twitter_cookie = TwitterCookieConnector(_classify_direct)
+    twitter_cookie.start()
 
     # Keep thread alive — connectors run in their own threads
     while True:

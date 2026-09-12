@@ -297,15 +297,12 @@ class ApifyConnector(BaseConnector):
     # ── Poll loops ───────────────────────────────────────────────
 
     def _poll_loop_twitter(self) -> None:
-        while self._running:
-            try:
-                self._fetch_twitter()
-            except Exception as exc:
-                log.error(
-                    "ApifyConnector twitter poll error: %s",
-                    exc,
-                )
-            time.sleep(self._twitter_interval)
+        log.info(
+            "ApifyConnector: Twitter polling "
+            "moved to TwitterCookieConnector. "
+            "Apify Twitter disabled."
+        )
+        return
 
     def _poll_loop_instagram(self) -> None:
         while self._running:
