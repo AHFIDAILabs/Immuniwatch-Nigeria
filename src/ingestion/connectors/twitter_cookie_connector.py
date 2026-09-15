@@ -16,13 +16,44 @@ log = logging.getLogger(__name__)
 
 _ALLOWED_LANGUAGES = {"en", "ha", "yo", "ig", "pcm"}
 
-# Rotate one search term per poll — same terms as ApifyConnector
+# Rotate one search term per poll — covers all 36 Nigerian vaccine topics
 SEARCH_TERMS = [
     "vaccine Nigeria",
     "vaccination Nigeria",
-    "NPHCDA",
+    "NPHCDA vaccine",
     "polio vaccine Nigeria",
     "immunization Nigeria",
+    "rigakafi Najeriya",
+    "ajesara Nigeria",
+    "vaccine Lagos",
+    "vaccine Kano",
+    "vaccine Abuja",
+    "vaccine Kaduna",
+    "vaccine Rivers",
+    "vaccine Ogun",
+    "vaccine Anambra",
+    "vaccine Enugu",
+    "COVID vaccine Nigeria",
+    "measles vaccine Nigeria",
+    "HPV vaccine Nigeria",
+    "meningitis Nigeria",
+    "diphtheria Nigeria",
+    "cholera Nigeria vaccine",
+    "malaria vaccine Nigeria",
+    "yellow fever vaccine Nigeria",
+    "tuberculosis Nigeria",
+    "NCDC Nigeria disease",
+    "health Nigeria immunization",
+    "child vaccine Nigeria",
+    "routine immunization Nigeria",
+    "rigakafi Hausa",
+    "ajesara Yoruba health",
+    "NPHCDA health Nigeria",
+    "WHO Nigeria vaccine",
+    "UNICEF Nigeria immunization",
+    "NaijaHealth vaccine",
+    "Nigeria public health",
+    "anti vaccine Nigeria",
 ]
 
 POLL_INTERVAL = 1800   # 30 minutes — free tier, no budget cap
