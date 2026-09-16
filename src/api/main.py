@@ -110,20 +110,8 @@ def _start_ingestion_worker() -> None:
     try:
         from src.ingestion.direct_runner import run as run_ingestion
 
-        def _safe_run():
-            try:
-                run_ingestion()
-            except Exception as exc:
-                log.error(
-                    "Ingestion worker crashed: %s — "
-                    "restarting in 30s", exc
-                )
-                import time
-                time.sleep(30)
-                _safe_run()
-
         t = threading.Thread(
-            target=_safe_run,
+            target=run_ingestion,
             daemon=True,
             name="ingestion-worker",
         )
