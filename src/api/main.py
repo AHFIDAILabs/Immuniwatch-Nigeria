@@ -257,11 +257,9 @@ async def health():
 # Register all other routes with API key authentication
 # ---------------------------------------------------------------------------
 from src.api.counter_narrative_routes import cn_router  # noqa: E402
-from src.api.ebola_routes import ebola_router  # noqa: E402
 from src.api.kb_routes import kb_router  # noqa: E402
 from src.api.routes import router  # noqa: E402
 
 app.include_router(router, dependencies=[Depends(require_api_key)])
 app.include_router(cn_router, dependencies=[Depends(require_api_key)])
 app.include_router(kb_router, dependencies=[Depends(require_api_key)])
-app.include_router(ebola_router, dependencies=[Depends(require_api_key)])
