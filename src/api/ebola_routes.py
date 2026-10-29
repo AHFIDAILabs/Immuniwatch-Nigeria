@@ -10,7 +10,6 @@ from pydantic import BaseModel
 from typing import Optional
 
 from src.models.classifier import classify
-from src.intelligence.rag import retrieve_snippets
 
 
 def require_api_key(x_ml_api_key: str = Header(...)):
@@ -76,29 +75,5 @@ def ebola_classify(
             language=req.language,
             model_version="v1.0.0",
         )
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
-
-
-@ebola_router.post("/counter-narrative")
-def ebola_counter_narrative(
-    req: EbolaClassifyRequest,
-    _: None = Depends(require_api_key),
-):
-    """
-    Generate Ebola counter-narrative using ebolawatch_kb.
-    """
-    try:
-        snippets = retrieve_snippets(
-            query=req.content,
-            collection_name="ebolawatch_kb",
-            top_k=3,
-        )
-        return {
-            "post_id": req.post_id,
-            "platform": req.platform,
-            "snippets": snippets,
-            "status": "retrieved",
-        }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
