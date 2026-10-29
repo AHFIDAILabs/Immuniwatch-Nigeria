@@ -3,13 +3,24 @@ EbolaWatch Nigeria — isolated API routes.
 Mounted at /ebola prefix in main.py.
 Does NOT touch any ImmuniWatch route or logic.
 """
-from fastapi import APIRouter, Depends, HTTPException
+import os
+
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
-from src.api.main import require_api_key
 from src.models.classifier import classify
 from src.intelligence.rag import retrieve_snippets
+
+
+def require_api_key(x_ml_api_key: str = Header(...)):
+    api_key = os.environ.get("API_KEY", "")
+    if not api_key or x_ml_api_key != api_key:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing X-ML-API-Key header",
+        )
+
 
 ebola_router = APIRouter(prefix="/ebola", tags=["EbolaWatch"])
 
